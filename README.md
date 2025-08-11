@@ -2,7 +2,5 @@
 A simple chat application made using golang and javascript
 
 ## Features
-- Create and Login to an account
-
-## Client
-Find on `client` branch
+- Connect to any server (using ws://) only
+- Login and register on any server

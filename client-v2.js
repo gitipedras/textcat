@@ -1,23 +1,33 @@
-let logingui = document.getElementById("logingui")
-let maingui = document.getElementById("maingui")
-let userBox = document.getElementById("userBox")
+let logingui = document.getElementById("logingui");
+let maingui = document.getElementById("maingui");
+let userBox = document.getElementById("userBox");
+let sidebar = document.getElementById("sidebar");
+let chatInputBar = document.getElementById("chatInputBar");
 
-maingui.style.display = 'none'
-userBox.style.display = 'none'
+// Initially hide main UI components except login
+maingui.style.display = 'none';
+userBox.style.display = 'none';
+sidebar.style.display = 'none';
+chatInputBar.style.display = 'none';
 
 function guiTransition() {
     if (logingui.style.display === 'block' || logingui.style.display === '') {
-        // If login GUI is visible (or not explicitly hidden), show main GUI
-        maingui.style.display = 'block';
-        userBox.style.display = 'block';
+        // Switch from login to main UI
+        maingui.style.display = 'flex';      // Use flex because layout uses flexbox
+        userBox.style.display = 'flex';
+        sidebar.style.display = 'flex';
+        chatInputBar.style.display = 'flex';
         logingui.style.display = 'none';
     } else {
-        // Otherwise, show login GUI and hide main GUI
+        // Switch from main UI back to login
         maingui.style.display = 'none';
         userBox.style.display = 'none';
+        sidebar.style.display = 'none';
+        chatInputBar.style.display = 'none';
         logingui.style.display = 'block';
     }
 }
+
 
 
 function preConnectRegister() {
