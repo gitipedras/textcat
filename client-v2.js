@@ -35,7 +35,9 @@ function preConnectRegister() {
     preConnect(registering)
 }
 
-function preConnect(registering) {
+let realClose = false;
+
+function preConnect(registering, realClose) {
     // URL's and page forms
     let address = document.getElementById("server").value;
     let username = document.getElementById("username").value;
@@ -80,8 +82,21 @@ function preConnect(registering) {
                 alert("Your credentials are invalid!")
                 break;
 
+            case "registerOk":
+                alert("[Server] Register success!")
+                break;
+
+            case "internalServerErr":
+                alert("[Server] Internal Server Error")
+                break;
+
+            case "alreadyExists":
+                alert("[Server] Username is already taken")
+                break;
+
             case "goodCredentials":
                 console.log("Login success")
+                realClose = true
                 guiTransition()
                 connect()
 
@@ -98,9 +113,21 @@ function preConnect(registering) {
     };
 
     prewebSocket.onclose = function() {
+        let Premsg = document.getElementById("Premsg")
+
         console.log("PRE WebSocket connection closed.");
-        //setTimeout(connect, 1000); // Reconnect after 1 second
+        Premsg.innerText = "Server unreachable... Retrying..."
+
+        if (( realClose == null && realClose == undefined)) {
+
+            console.log("Reconnecting...")
+            setTimeout(preConnect, 1000); // Reconnect after 1 second
+
+        } else {
+            console.log("RealClose is disabled.")
+        }
     };
+
 
     prewebSocket.onerror = function(error) {
         console.error("WebSocket error:", error);
@@ -164,8 +191,15 @@ function connect() {
                 break;
 
             case "kicked":
-                alert("[Server] Kicked by the server")
+                alert("[Server] Kicked by the server");
+                logout();
                 break;
+
+            case "unknownReq":
+                console.warn("Recieved unknown request type from server (outdated client or server??)")
+
+            case "internalServerErr":
+                alert("[Server] Internal Server Error")
 
             case "sendMessage":
                 messageDisplay.innerHTML += `<p>@${msg.username}: ${msg.message}</p>`;
