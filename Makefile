@@ -32,15 +32,4 @@ build:
 	done
 
 archive:
-	@for os in $(OS_LIST); do \
-		for arch in $(ARCH_LIST); do \
-			out_dir=$(BUILD_DIR)/$$os-$$arch; \
-			cd $(BUILD_DIR); \
-			if [ "$$os" = "windows" ]; then \
-				zip -r $$os-$$arch.zip $$os-$$arch > /dev/null; \
-			else \
-				tar czf $$os-$$arch.tar.gz $$os-$$arch; \
-			fi; \
-			cd - > /dev/null; \
-		done; \
-	done
+	@zip -r build-latest.zip build
