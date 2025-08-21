@@ -4,6 +4,19 @@ let userBox = document.getElementById("userBox");
 let sidebar = document.getElementById("sidebar");
 let chatInputBar = document.getElementById("chatInputBar");
 
+let savedTheme = localStorage.getItem("savedTheme")
+document.body.setAttribute("data-theme", savedTheme)
+
+const themeSelector = document.getElementById("themeForm");
+const select = document.getElementById("themes");
+
+themeSelector.addEventListener("submit", function (event) {
+    event.preventDefault(); // stop page reload
+    const theme = select.value; // get chosen theme
+    document.body.setAttribute("data-theme", theme); // apply it
+    localStorage.setItem("savedTheme", theme);
+});
+
 // Initially hide main UI components except login
 maingui.style.display = 'none';
 userBox.style.display = 'none';
