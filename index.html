@@ -33,18 +33,26 @@
   <!-- Modal content -->
   <div class="modal-content">
     <span class="close">&times;</span>
-    <h3>Settings</h3>
+    <h2>Settings</h2>
 
-    <h4>Client settings </h4>
-        <form id="themeForm">
-        <label for="themes">Theme</label>
-          <select name="theme" id="themes">
-            <option value="light">Default (theme)</option>
-            <option value="dark">Dark Theme</option>
-            <option value="blue">Blue</option>
-          </select>
-          <br><br>
-        <input type="submit" value="Submit">
+    <h3>Client settings </h3>
+
+      <h4>Client theme</h4>
+          <form id="themeForm">
+          <label for="themes">Theme</label>
+            <select name="theme" id="themes">
+              <option value="light">Default (theme)</option>
+              <option value="dark">Dark Theme</option>
+              <option value="blue">Blue</option>
+            </select>
+            <br><br>
+          <input type="submit" value="Submit">
+          </form>
+
+      <h4>Local storage (cookies, client data)</h4>
+      <p> Delete all localStorage (this doesn't delete your account or any of your data on the server)</p>
+      <button class="redbtn" onclick="deleteAllStorage()">Clear all local storage</button>
+
       </form>
   </div>
 
@@ -81,6 +89,7 @@
 </div>
 
 <script src="client-v2.js"></script>
+<script src="client-extras.js"></script>
 <script>
 // Get the modal
 var modal = document.getElementById("settingsPage");

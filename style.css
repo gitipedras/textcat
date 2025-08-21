@@ -139,6 +139,24 @@ input {
   font-weight: bold;
   }
 
+  .redbtn {
+  background-color: var(--logoutbtn-color);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  }
+
+  .redbtn:hover {
+  background-color: var(--logoutbtn-color-hover);
+  border: 1px solid var(--logoutbtn-color);
+  }
+
+
+
   #logoutbtn {
   background-color: var(--logoutbtn-color);
   color: white;
