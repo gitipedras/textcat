@@ -11,14 +11,12 @@ import (
 	/* logging */
 	"log/slog"
 
-	/* database */
-	_ "github.com/mattn/go-sqlite3"
-	
-	//"database/sql"
-
 	/* internal */
 	"textcat/messages"	
 	"textcat/models"
+	"textcat/auth"
+	"textcat/database"
+
 )
 
 
@@ -31,6 +29,7 @@ var upgrader = websocket.Upgrader{
 var clients = make(map[*websocket.Conn]bool) // Connected clients
 var broadcast = make(chan []byte)            // Broadcast channel
 var mutex = &sync.Mutex{}                    // Protect clients map
+var Sessions = auth.NewSessionManager()
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
@@ -68,6 +67,9 @@ func handleMessages() {
 
 func main() {
 	http.HandleFunc("/ws", wsHandler)
+
+	database.DbInit()
+	
 
 	var port string = ":8080"
 	models.App.Log.Info("starting network server...", slog.String("port", port))

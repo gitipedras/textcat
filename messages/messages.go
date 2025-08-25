@@ -1,11 +1,13 @@
 package messages
 
 import (
-	//"textcat/auth"
+	"textcat/auth"
 	"textcat/models"
+	"encoding/json"
+	"fmt"
 )
 
-func HandleMSG(message []byte) {
+func HandleMSG(msg []byte) {
 	var data models.WsIncome
 
 	err := json.Unmarshal(msg, &data)
@@ -13,9 +15,9 @@ func HandleMSG(message []byte) {
 		models.App.Log.Error("[auth.go:8] Failed to Unmarshal json: %s", err)
 	}
 	
-	switch msg.Rtype {
+	switch data.Rtype {
 		case "login":
-			fmt.Printf("log the user in")
+			auth.UserLogin(data)
 
 		case "register":
 			fmt.Printf("create account for user")

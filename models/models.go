@@ -17,7 +17,7 @@ var App = &Application {
 type WsIncome struct {
 	Rtype string `"json:Rtype"`
 	Username string `"json:Username"`
-	sessionToken string `"json:sessionToken"`
+	SessionToken string `"json:sessionToken"`
 }
 
 /*
