@@ -15,10 +15,11 @@ You can just download the client and open it in your browser.
 
 **Server**
 
-- DO NOT PUT THE `conn` in the app struct
-- get the db stuff done
-- have login/register done by august 26th
+- prevent users from logging in twice (session token spam)
 
+**Client**
+
+- check if fields are empty
 
 **Server code to eventually be used/added (ordered by importance)**
 ```
@@ -53,8 +54,3 @@ for client := range clients {
 mutex.Unlock()
 
 ```
-
-
-**Client**
-
-- check if fields are empty

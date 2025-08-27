@@ -20,6 +20,12 @@ type WsIncome struct {
 	SessionToken string `"json:sessionToken"`
 }
 
+type WsSend struct {
+	Rtype string `"json:Rtype"`
+	Status string `"json:Status"`
+	Value string `"json:Value"`
+}
+
 /*
 
 // USE A METHOD

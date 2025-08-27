@@ -1,98 +1,132 @@
 package auth
 
 import (
-	/* websocket */
-	"github.com/gorilla/websocket"
-
 	/* other stuff */
-	"time"
-	"sync"
+    "log/slog"
+    "time"
+    "encoding/json"
+
+    /* websockets!!! */
+    "github.com/gorilla/websocket"
 
 	/* internal  */
 	"textcat/database"
 	"textcat/models"
+    "textcat/sessions"
 )
 
-func UserLogin(msg models.WsIncome) {
+var SessionManager = sessions.NewSessionManager()
+
+
+func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
 	ok := database.CheckUser(msg.Username)
 	if ok {
+
 		good := database.CheckPass(msg.Username, msg.SessionToken)
 		if good {
-			// LOGIN THE USER
-		}
+			models.App.Log.Info("UserLogin", slog.String("username", msg.Username))
+		
+            token, err := SessionManager.GenerateToken(16) // 16 bytes = 32 hex chars
+            if err != nil {
+                models.App.Log.Error("Failed to generate session token", slog.String("err", err.Error()))
+            }
+            
+            // reusable struct, sessionManager wont complain if this is duped
+            session := &sessions.Session {
+                Username:     msg.Username,
+                SessionToken: token,
+                Conn:         conn, // the websocket.Conn for this client
+                ConnectedAt:  time.Now(),
+            }
+
+            SessionManager.Add(session)
+
+            msg := models.WsSend{
+                Rtype:   "loginStats",
+                Status: "ok",
+                Value: token,
+            }
+
+            data, err := json.Marshal(msg)
+            if err != nil {
+                models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            }
+            
+            err = SessionManager.SendToClient(token, data) 
+            if err != nil {
+                models.App.Log.Error("Failed to send message", slog.String("err", err.Error()))
+            }
+
+        } else {
+            response := models.WsSend {
+            Rtype:   "loginStats",
+            Status:  "invalid",
+            }
+            data, err := json.Marshal(response)
+            if err != nil {
+                models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+                return
+            }
+            conn.WriteMessage(websocket.TextMessage, data)
+        }
 
 	} else {
-		// user not found
+		// user already exists
+        response := models.WsSend {
+            Rtype:   "loginStats",
+            Status:  "invalid",
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return
+        }
+        
+        conn.WriteMessage(websocket.TextMessage, data)
 	}
 }
 
-func UserRegister() {
-	
-}
+func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
+	ok := database.CheckUser(msg.Username)
+    if ok {
+        // user already exists
+        response := models.WsSend {
+            Rtype:   "registerStats",
+            Status:  "alreadyExists",
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return
+        }
+        
+        conn.WriteMessage(websocket.TextMessage, data)
+    } else {
+        err := database.CreateUser(msg.Username, msg.SessionToken)
+        if err != nil {
+            response := models.WsSend {
+            Rtype:   "registerStats",
+            Status:  "isr",
+            }
+            data, err := json.Marshal(response)
+            if err != nil {
+                models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+                return
+            }
+            conn.WriteMessage(websocket.TextMessage, data)
 
-
-// ===================================== //
-//            SESSION MANAGER            //
-// ------------------------------------- //
-
-// Session represents a single connected user
-type Session struct {
-    Username     string
-    SessionToken string
-    Conn         *websocket.Conn
-    ConnectedAt  time.Time
-}
-
-// SessionManager manages all active sessions
-type SessionManager struct {
-    sessions map[string]*Session // key: session token
-    mu       sync.RWMutex
-}
-
-// NewSessionManager creates a new session manager
-func NewSessionManager() *SessionManager {
-    return &SessionManager{
-        sessions: make(map[string]*Session),
+            models.App.Log.Error("Failed to Create user")
+        } else {
+            response := models.WsSend {
+            Rtype:   "registerStats",
+            Status:  "ok",
+            }
+            data, err := json.Marshal(response)
+            if err != nil {
+                models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+                return
+            }
+            conn.WriteMessage(websocket.TextMessage, data)
+        }
     }
-}
-
-// Add adds a new session
-func (sm *SessionManager) Add(session *Session) {
-    sm.mu.Lock()
-    defer sm.mu.Unlock()
-    sm.sessions[session.SessionToken] = session
-}
-
-// Get retrieves a session by token
-func (sm *SessionManager) Get(token string) (*Session, bool) {
-    sm.mu.RLock()
-    defer sm.mu.RUnlock()
-    s, ok := sm.sessions[token]
-    return s, ok
-}
-
-// Remove deletes a session
-func (sm *SessionManager) Remove(token string) {
-    sm.mu.Lock()
-    defer sm.mu.Unlock()
-    delete(sm.sessions, token)
-}
-
-// SendToClient sends a message to a single session
-func (sm *SessionManager) SendToClient(token string, message []byte) error {
-    sm.mu.RLock()
-    session, ok := sm.sessions[token]
-    sm.mu.RUnlock()
-
-    if !ok || session.Conn == nil {
-        return nil // session not found or disconnected
-    }
-
-    err := session.Conn.WriteMessage(websocket.TextMessage, message)
-    if err != nil {
-        // clean up disconnected client
-        sm.Remove(token)
-        session.Conn.Close()
-    }
-    return err
 }

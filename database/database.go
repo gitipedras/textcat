@@ -11,18 +11,18 @@ import (
 )
 
 var DB *sql.DB
+var err error
 
 func DbInit() {
 	/////// --- connect to the database --- ///////
 
 	// Connect to the SQLite database
-    DB, err := sql.Open("sqlite3", "./appdata.db")
+    DB, err = sql.Open("sqlite3", "./appdata.db")
     if err != nil {
         models.App.Log.Error("Failed to connect to database: ", slog.String("err", err.Error()))
         return
     }
 
-    defer DB.Close()
     models.App.Log.Info("Connected to the SQLite database successfully.")
 
     /////// --- database checks --- ///////
@@ -70,4 +70,18 @@ func CheckPass(username, password string) bool {
 
     // Compare the stored password with the provided one
     return storedPassword == password
+}
+
+func CreateUser(username, password string) error {
+    var description string = "empty"
+    query := `
+        INSERT INTO users (username, description, password)
+        VALUES (?, ?, ?)
+    `
+    _, err := DB.Exec(query, username, description, password)
+    if err != nil {
+        models.App.Log.Error("Failed to insert user", slog.String("err", err.Error()))
+        return err
+    }
+    return nil
 }

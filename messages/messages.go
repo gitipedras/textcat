@@ -5,9 +5,10 @@ import (
 	"textcat/models"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 )
 
-func HandleMSG(msg []byte) {
+func HandleMSG(conn *websocket.Conn, msg []byte) {
 	var data models.WsIncome
 
 	err := json.Unmarshal(msg, &data)
@@ -17,10 +18,10 @@ func HandleMSG(msg []byte) {
 	
 	switch data.Rtype {
 		case "login":
-			auth.UserLogin(data)
+			auth.UserLogin(conn, data)
 
 		case "register":
-			fmt.Printf("create account for user")
+			auth.UserRegister(conn, data)
 
 		case "message":
 			fmt.Printf("handle the message")

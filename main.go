@@ -14,7 +14,7 @@ import (
 	/* internal */
 	"textcat/messages"	
 	"textcat/models"
-	"textcat/auth"
+	//"textcat/auth"
 	"textcat/database"
 
 )
@@ -29,7 +29,7 @@ var upgrader = websocket.Upgrader{
 var clients = make(map[*websocket.Conn]bool) // Connected clients
 var broadcast = make(chan []byte)            // Broadcast channel
 var mutex = &sync.Mutex{}                    // Protect clients map
-var Sessions = auth.NewSessionManager()
+//var Sessions = auth.NewSessionManager()
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
@@ -51,18 +51,20 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
           mutex.Unlock()
           break
        }
-       broadcast <- message
+       messages.HandleMSG(conn, message)
+
+       //broadcast <- message
     }
 }
 
-func handleMessages() {
+/*func handleMessages() {
 	for {
 		// Grab the next message from the broadcast channel
 		message := <-broadcast
 
 		messages.HandleMSG(message)
 	}
-}
+}*/
 
 
 func main() {
@@ -75,11 +77,13 @@ func main() {
 	models.App.Log.Info("starting network server...", slog.String("port", port))
 
 	// if you put this goroutine after it will never be executed
-	go handleMessages()
+	//go handleMessages()
 
 	err := http.ListenAndServe(port, nil)
 
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
+
+	defer database.DB.Close()
 }
