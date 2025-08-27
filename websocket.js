@@ -66,11 +66,12 @@ function preConnect(registering, realClose) {
 
         if (( registering == undefined || registering == null )) {
             let payload = {
-                rtype: "loginRequest",
+                rtype: "login",
                 username: username,
                 sessionToken: sessionToken,
                 //clientID: "textcat_gui_client",
             };
+            console.log(payload)
             prewebSocket.send(JSON.stringify(payload));
         } else {
             let payload = {
@@ -79,8 +80,8 @@ function preConnect(registering, realClose) {
                 sessionToken: sessionToken,
                 //clientID: "textcat_gui_client",
             };
+
             prewebSocket.send(JSON.stringify(payload));
-            console.log("Register success! Please login now.")
         }
 
     };
@@ -90,34 +91,34 @@ function preConnect(registering, realClose) {
         const msg = JSON.parse(event.data);
         console.log(msg)
 
-        switch (msg.rtype) {
-            case "invalidCredentials":
-                alert("Your credentials are invalid!")
-                break;
+        switch (msg.Rtype) {
+            case "loginStats":
+                if (msg.Status == "ok") {
+                    console.log("Login success, happy chatting ;)")
+                    realClose = true
 
-            case "registerOk":
-                alert("[Server] Register success!")
-                break;
+                    //showAlert("Loggin in...")
 
-            case "internalServerErr":
-                alert("[Server] Internal Server Error")
-                break;
-
-            case "alreadyExists":
-                alert("[Server] Username is already taken")
-                break;
-
-            case "goodCredentials":
-                console.log("Login success")
-                realClose = true
-                guiTransition()
-                connect()
+                    guiTransition()
+                    connect(msg.Value)
+                } else {
+                    showAlert("Username or Password is incorrect")
+                }
 
                 break;
 
-            case "rejected":
-                alert("Login was rejected by the server")
-                break;
+            case "registerStats":
+                if (msg.Status == "ok") {
+                    console.log("Register success, happy chatting ;)")
+                    realClose = true
+
+                    showAlert("Account created, please log in to activate the account")
+                } 
+                if (msg.Status == "isr") {
+                     showAlert("Internal server error")
+                } else {
+                    showAlert("Username is taken")
+                }
 
             default:
                 console.log("Unknown request type recieved from server: " + msg.rtype + " Possible reason: Outdated client or server!");
@@ -148,7 +149,7 @@ function preConnect(registering, realClose) {
 }
 
 
-function connect() {
+function connect(token) {
     prewebSocket.close()
 
     // URL's and page forms
@@ -158,11 +159,22 @@ function connect() {
     let sessionToken = document.getElementById("sessiontoken").value;
     let usernamebox = document.getElementById("usernamebox")
 
-    usernamebox.innerText = "Logged in as: " + username
+    usernamebox.innerHTML = `Logged in as: <span id="username-link" style="color: var(--accent-color); cursor: pointer;">${username}</span>`;
+
+    // Add click handler
+    document.getElementById("username-link").onclick = function() {
+        showUser({
+          username: username,
+          token: token,
+          description: "nothing here",
+          dateCreated: "nothing here"
+        });
+    };
+
 
     document.getElementById("messageInput").addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
-            sendMessage();
+            sendMessage(token);
             this.value = "";
         }
     });
@@ -200,7 +212,7 @@ function connect() {
                 break;
 
             case "goodCredentials":
-                console.log("[Server] credentials OK")
+                //console.log("[Server] credentials OK")
                 break;
 
             case "kicked":
@@ -208,15 +220,22 @@ function connect() {
                 logout();
                 break;
 
+            case "invalidChannel":
+                alert("[Server] Invalid Channel: " + msg.value)
+                console.warn("Invalid channel: " + msg.value)
+
             case "unknownReq":
                 console.warn("Recieved unknown request type from server (outdated client or server??)")
 
-            case "internalServerErr":
+            /*case "internalServerErr":
                 alert("[Server] Internal Server Error")
+            */
 
             case "sendMessage":
-                messageDisplay.innerHTML += `<p>@${msg.username}: ${msg.message}</p>`;
+                //console.log("Sent a message to the server")
 
+            case "newMessage":
+                messageDisplay.innerHTML += `<p>@${msg.username}: ${msg.message}</p>`;
 
             default:
                 console.log("Unknown request type:" + msg.rtype + " Possible echoed request (BUG)");
@@ -235,17 +254,19 @@ function connect() {
     };
 }
 
-function sendMessage() {
+function sendMessage(token) {
     let address = document.getElementById("server").value;
     let username = document.getElementById("username").value;
     let input = document.getElementById("messageInput").value;
     let sessionToken = document.getElementById("sessiontoken").value;
+    let channelID = "main";
 
     let payload = {
         rtype: "sendMessage",
         username: username,
-        sessionToken: sessionToken,
+        token: token,
         message: input,
+        channelID: channelID,
         //clientID: "textcat_gui_client",
     };
     webSocket.send(JSON.stringify(payload));

@@ -15,7 +15,7 @@
 
         Server Address: <input type="text" id="server" placeholder="Enter server address"><br>
         Username: <input type="text" id="username" placeholder="Enter username"><br>
-        Session Token: <input type="text" id="sessiontoken" value="889b1mmds"><br>
+        Password: <input type="text" id="sessiontoken" value="" placeholder="Password"><br>
         <button onclick="preConnect()" type="submit">Login</button>
         <button onclick="preConnectRegister()" type="submit">Register</button><br>
 
@@ -26,6 +26,27 @@
 
 
 </div>
+
+<div id="custom-popup" class="popup">
+    <div class="popup-content">
+      <p id="popup-text"></p>
+      <button id="popup-ok" onclick="closePopup()">Ok</button>
+    </div>
+</div>
+
+<div id="user-popup" class="userpopup">
+  <div class="userpopup-content">
+    <h2 id="user-popup-username"></h2>
+    <p id="user-popup-description"></p>
+    <p id="user-popup-date"></p>
+    <br>
+    <p>Token (hover to show)</p>
+    <p id="user-popup-token"></p>
+    <button id="user-popup-ok">Close</button>
+  </div>
+</div>
+
+
 
 <!-- The Modal -->
 <div id="settingsPage" class="modal">
@@ -88,7 +109,7 @@
 
 </div>
 
-<script src="client-v2.js"></script>
+<script src="websocket.js"></script>
 <script src="client-extras.js"></script>
 <script>
 // Get the modal
