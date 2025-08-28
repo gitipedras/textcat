@@ -4,6 +4,9 @@ let userBox = document.getElementById("userBox");
 let sidebar = document.getElementById("sidebar");
 let chatInputBar = document.getElementById("chatInputBar");
 
+var token
+var chid
+
 let savedTheme = localStorage.getItem("savedTheme")
 document.body.setAttribute("data-theme", savedTheme)
 
@@ -100,6 +103,7 @@ function preConnect(registering, realClose) {
                     //showAlert("Loggin in...")
 
                     guiTransition()
+                    token = msg.Value
                     connect(msg.Value)
                 } else {
                     showAlert("Username or Password is incorrect")
@@ -185,30 +189,20 @@ function connect(token) {
 
     webSocket.onopen = function() {
         console.log("Connected to WebSocket server");
-
-        /*
-        let payload = {
-            rtype: "hello",
-            username: username,
-            sessionToken: sessionToken,
-            message: "i am a client trying to connect!",
-            //clientID: "textcat_gui_client",
-        };
-        webSocket.send(JSON.stringify(payload));
-        */
         console.log("Websocket connection open")
     };
 
-
     webSocket.onmessage = function(event) {
         let messageDisplay = document.getElementById("messages");
+        console.log(event)
 
         const msg = JSON.parse(event.data);
-        console.log(msg)
+        console.log("message is ", msg)
+        console.log(msg.Rtype)
 
-        switch (msg.rtype) {
+        switch (msg.Rtype) {
             case "invalidCredentials":
-                alert("[Server] Your credentials are invalid!")
+                showAlert("[Server] Your credentials are invalid!")
                 break;
 
             case "goodCredentials":
@@ -216,26 +210,41 @@ function connect(token) {
                 break;
 
             case "kicked":
-                alert("[Server] Kicked by the server");
+                showAlert("[Server] Kicked by the server");
                 logout();
                 break;
 
             case "invalidChannel":
-                alert("[Server] Invalid Channel: " + msg.value)
+                showAlert("[Server] Invalid Channel: " + msg.value)
                 console.warn("Invalid channel: " + msg.value)
+                break;
 
             case "unknownReq":
                 console.warn("Recieved unknown request type from server (outdated client or server??)")
+                break;
 
-            /*case "internalServerErr":
-                alert("[Server] Internal Server Error")
+            /*case "isr":
+                showAlert("[Server] Internal Server Error")
+                logout()
+                break;
             */
 
-            case "sendMessage":
-                //console.log("Sent a message to the server")
+            case "alreadyConnected":
+                showAlert("You are already connected to this channel!")
+                break;
+
+            case "invalidSession":
+                showAlert("An invalid session was provided")
+                logout()
+                break;
 
             case "newMessage":
+                console.log("New message: " + msg.Value)
+                break;
+
+            case "message":
                 messageDisplay.innerHTML += `<p>@${msg.username}: ${msg.message}</p>`;
+                break;
 
             default:
                 console.log("Unknown request type:" + msg.rtype + " Possible echoed request (BUG)");
@@ -254,23 +263,60 @@ function connect(token) {
     };
 }
 
+// Add this new function to your client.js file
+function ConnectToChannel(channelName) {
+    chid = channelName
+    if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+        const payload = {
+            Rtype: "connect",
+            sessionToken: token,
+            ChannelID: channelName
+        };
+        webSocket.send(JSON.stringify(payload));
+        console.log(`Connection request sent for channel: ${channelName}`);
+    } else {
+        console.error("Cannot connect to channel. Connection not open or user info missing.");
+    }
+}
+
+// Add this event listener to the bottom of your client.js file
+document.addEventListener("DOMContentLoaded", () => {
+    // ... (your existing code) ...
+
+    const channelList = document.getElementById("channelList");
+
+    channelList.addEventListener("click", (event) => {
+        // Prevent the default link behavior (navigating to a new page)
+        event.preventDefault();
+
+        // Check if the clicked element is a channel link
+        if (event.target.classList.contains("channel-link")) {
+            // Get the channel name from the data-channel attribute
+            const channelName = event.target.getAttribute("data-channel");
+            ConnectToChannel(channelName);
+        }
+    });
+
+    // ... (rest of your existing code) ...
+});
+
 function sendMessage(token) {
     let address = document.getElementById("server").value;
     let username = document.getElementById("username").value;
     let input = document.getElementById("messageInput").value;
     let sessionToken = document.getElementById("sessiontoken").value;
-    let channelID = "main";
+    let channelID = chid;
 
     let payload = {
-        rtype: "sendMessage",
-        username: username,
-        token: token,
-        message: input,
-        channelID: channelID,
+        Rtype: "message",
+        Username: username,
+        SessionToken: token,
+        Message: input,
+        ChannelID: channelID,
         //clientID: "textcat_gui_client",
     };
     webSocket.send(JSON.stringify(payload));
-
+    console.log(payload)
 
     input.value = "";
 }
