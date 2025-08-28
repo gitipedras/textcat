@@ -13,6 +13,10 @@ import (
 
     /* websockets */
     "github.com/gorilla/websocket"
+
+    /* internal */
+    "textcat/models"
+    "log/slog"
 )
 
 // Session represents a single connected user
@@ -80,6 +84,7 @@ func (sm *SessionManager) SendToClient(token string, message []byte) error {
     if !ok || session.Conn == nil {
         return nil // session not found or disconnected
     }
+    models.App.Log.Info("sending message to client", slog.String("token", token))
 
     err := session.Conn.WriteMessage(websocket.TextMessage, message)
     if err != nil {

@@ -18,9 +18,9 @@ var App = &Application{
 type WsIncome struct {
 	Rtype string `"json:Rtype"`
 	Username string `"json:Username"`
-	SessionToken string `"json:sessionToken"`
-	Message string `"json:message"`
-	ChannelID string `"json:channelID"`
+	SessionToken string `"json:SessionToken"`
+	Message string `"json:Message"`
+	ChannelID string `"json:ChannelID"`
 }
 
 type WsSend struct {
@@ -28,3 +28,9 @@ type WsSend struct {
 	Status string `"json:Status"`
 	Value string `"json:Value"`
 }
+
+/*
+func dg(str string) {
+	fmt.Printf(str)
+}
+*/
