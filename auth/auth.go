@@ -130,3 +130,24 @@ func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
         }
     }
 }
+
+
+func SessionTimer() {
+    models.App.Log.Info("Started session timer")
+
+    expiration := 5  * time.Hour
+
+    for {
+        SessionManager.Mu.Lock()
+        for token, session := range SessionManager.Sessions {
+            if time.Since(session.ConnectedAt) > expiration {
+                delete(SessionManager.Sessions, token)
+                session.Conn.Close()
+                models.App.Log.Info("Expired session removed", slog.String("user", session.Username))
+            }
+        }
+        SessionManager.Mu.Unlock()
+
+        time.Sleep(10 * time.Second) // wait 10 secs before checking again
+    }
+}

@@ -1,11 +1,16 @@
 package messages
 
 import (
+	/* internal */
 	"textcat/auth"
 	"textcat/models"
-	"encoding/json"
-	"fmt"
+	"textcat/channels"
+
+	/* websocket*/
 	"github.com/gorilla/websocket"
+
+	/* data processing */
+	"encoding/json"
 )
 
 func HandleMSG(conn *websocket.Conn, msg []byte) {
@@ -24,6 +29,9 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 			auth.UserRegister(conn, data)
 
 		case "message":
-			fmt.Printf("handle the message")
+			channels.HandleMSG(data.Username, data.SessionToken, data.Message, data.ChannelID, conn)
+		
+		case "connect":
+			channels.ConnectUser(data.SessionToken, data.ChannelID, conn)
 	}
 }

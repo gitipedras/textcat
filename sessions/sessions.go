@@ -51,6 +51,19 @@ func (sm *SessionManager) Get(token string) (*Session, bool) {
     return s, ok
 }
 
+func (sm *SessionManager) Exists(token string) bool {
+    sm.Mu.RLock()
+    defer sm.Mu.RUnlock()
+
+    session, ok := sm.Sessions[token]
+    if !ok || session == nil || session.Conn == nil {
+        return false
+    }
+
+    return true
+}
+
+
 // Remove deletes a session
 func (sm *SessionManager) Remove(token string) {
     sm.Mu.Lock()

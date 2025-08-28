@@ -7,17 +7,20 @@ import (
 )
 
 type Application struct {
-	Log *slog.Logger // basic logger
+	Log    *slog.Logger // basic logger
 }
 
-var App = &Application {
-	    Log: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+var App = &Application{
+	Log:    slog.New(slog.NewTextHandler(os.Stderr, nil)),
 }
+
 
 type WsIncome struct {
 	Rtype string `"json:Rtype"`
 	Username string `"json:Username"`
 	SessionToken string `"json:sessionToken"`
+	Message string `"json:message"`
+	ChannelID string `"json:channelID"`
 }
 
 type WsSend struct {
@@ -25,19 +28,3 @@ type WsSend struct {
 	Status string `"json:Status"`
 	Value string `"json:Value"`
 }
-
-/*
-
-// USE A METHOD
-func (a *Application) InitAppFields() {
-	a.Log = slog.New(slog.NewTextHandler(os.Stderr, nil))
-}
-
-var App *Application
-
-func InitApp() {
-	App = &Application{}
-	App.InitAppFields()
-}
-
-*/

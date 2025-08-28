@@ -14,7 +14,7 @@ import (
 	/* internal */
 	"textcat/messages"	
 	"textcat/models"
-	//"textcat/auth"
+	"textcat/auth"
 	"textcat/database"
 
 )
@@ -69,15 +69,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/ws", wsHandler)
+	var port string = ":8080"
 
 	database.DbInit()
-	
 
-	var port string = ":8080"
 	models.App.Log.Info("starting network server...", slog.String("port", port))
 
 	// if you put this goroutine after it will never be executed
-	//go handleMessages()
+	go auth.SessionTimer()
 
 	err := http.ListenAndServe(port, nil)
 
