@@ -13,11 +13,11 @@
     <h1>Login</h1>
     <div>
 
-        Server Address: <input type="text" id="server" placeholder="Enter server address"><br>
-        Username: <input type="text" id="username" placeholder="Enter username"><br>
-        Password: <input type="text" id="sessiontoken" value="" placeholder="Password"><br>
-        <button onclick="preConnect()" type="submit">Login</button>
-        <button onclick="preConnectRegister()" type="submit">Register</button><br>
+        Server Address: <input type="text" id="server" placeholder="Server address"><br>
+        Username: <input type="text" id="username" placeholder="Username"><br>
+        Password: <input type="text" id="userpass" value="" placeholder="Password"><br>
+        <button onclick="login()" type="submit">Login</button>
+        <button onclick="loginRegister()" type="submit">Register</button><br>
 
     </div>
 
@@ -104,7 +104,7 @@
 
 <div id="chatInputBar">
     <input type="text" id="messageInput" placeholder="Enter your message">
-    <button id="sendButton" onclick="sendMessage()">Send</button>
+    <button id="sendButton" onclick="writeMessage()">Send</button>
 </div>
 
 
@@ -112,7 +112,7 @@
 </div>
 
 <script src="websocket.js"></script>
-<script src="client-extras.js"></script>
+<script src="client.js"></script>
 <script>
 // Get the modal
 var modal = document.getElementById("settingsPage");
