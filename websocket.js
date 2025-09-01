@@ -110,6 +110,10 @@ function wsConnect(action, address, password) {
                 break;
             */
 
+            case "invalidToken":
+                showAlert("An invalid token was provided to the server -- please login again.")
+                break;
+                
             case "alreadyConnected":
                 showAlert("You are already connected to a channel")
                 break;
@@ -176,7 +180,7 @@ function writeMessage() {
                 SessionToken: userToken,
                 ChannelID: currentChannel,
                 Message: msgValue,
-                Username: username,
+                Username: "NotDewier",
     };
     console.log("Sent message: ", payload)
     webSocket.send(JSON.stringify(payload));
