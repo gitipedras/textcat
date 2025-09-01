@@ -1,7 +1,8 @@
 var userToken
 let currentChannel = "main";
+let msgInput = document.getElementById("messageInput")
 
-function wsConnect(action, msgInput, address, password, username) {
+function wsConnect(action, address, password, username) {
 // action is if ur signin in or registering
 // msg is the object with the input field
 // address is the object with the server address
@@ -9,41 +10,17 @@ function wsConnect(action, msgInput, address, password, username) {
     let url = "ws://" + address + "/ws"
     webSocket = new WebSocket(url);
 
+    let sidebar = document.getElementById("sidebar")
     function inputInit() {
-      const bind = () => {
-        const input = document.getElementById(msgInput);
-        if (!input) {
-          console.warn("Input not found:", msgInput);
-          return;
-        }
-
-        input.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") {
-            if (!userToken) {
-              showAlert("You must be logged in before sending messages.");
-              return;
-            }
-            writeMessage(token, this.value);
-            this.value = "";
-          }
-        });
-
+        console.log("input init")
         document.querySelectorAll(".channel-link").forEach(link => {
-          link.addEventListener("click", e => {
-            e.preventDefault();
-            currentChannel = link.dataset.channel;
-            console.log("Switched to channel:", currentChannel);
-          });
+            link.addEventListener("click", e => {
+                e.preventDefault(); // stop the "#" jump
+                const channelName = link.getAttribute("data-channel");
+                connectChannel(channelName);
+            });
         });
-      };
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", bind, { once: true });
-      } else {
-        bind();
-      }
     }
-
 
 
     webSocket.onopen = function() {
@@ -69,8 +46,7 @@ function wsConnect(action, msgInput, address, password, username) {
             webSocket.send(JSON.stringify(payload));
         }
     };
-
-    console.log(password)
+    
 
     webSocket.onmessage = function(event) {
 
@@ -81,8 +57,8 @@ function wsConnect(action, msgInput, address, password, username) {
             /* --- Loggin In and Registering */
             case "loginStats":
                 if (msg.Status == "ok") {
-                    console.log(msg.Value)
                     userToken = msg.Value
+                    console.log("line 53: user token is: ", userToken)
                     guiTransition()
                     inputInit()
                 } else {
@@ -137,7 +113,7 @@ function wsConnect(action, msgInput, address, password, username) {
 
             case "NewMessage":
                 console.log("New message: " + msg.Value)
-                messageDisplay.innerHTML += `<p>@${msg.username}: ${msg.message}</p>`;
+                messageDisplay(msg.Username, msg.Value)
                 break;
 
             default:
@@ -164,14 +140,44 @@ function logout() {
     webSocket.close();
 }
 
-function writeMessage(token, messagecontent, msgUser) {
+function connectChannel(channel) {
+    msgValue = msgInput.value
+    let payload = {
+                Rtype: "connect",
+                SessionToken: userToken,
+                ChannelID: channel,
+                Username: "dewier",
+    };
+    console.log("Connected to channel: ", payload)
+    webSocket.send(JSON.stringify(payload));
+}
+
+function writeMessage() {
+    msgValue = msgInput.value
     let payload = {
                 Rtype: "message",
                 SessionToken: userToken,
                 ChannelID: currentChannel,
-                Message: messagecontent,
-                Username: msgUser,
+                Message: msgValue,
+                Username: "dewier",
     };
     console.log("Sent message: ", payload)
     webSocket.send(JSON.stringify(payload));
+}
+
+function messageDisplay(username, message) {
+    const messagesDiv = document.getElementById("messages");
+
+    const wrapper = document.createElement("div");
+
+    const userEl = document.createElement("b");
+    userEl.textContent = username + ": ";
+
+    const msgEl = document.createElement("span"); // <- use span instead of p
+    msgEl.textContent = message;
+
+    wrapper.appendChild(userEl);
+    wrapper.appendChild(msgEl);
+
+    messagesDiv.appendChild(wrapper);
 }

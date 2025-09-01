@@ -1,12 +1,6 @@
-/* input fields */
-let wsServer = document.getElementById("server").value
-let username = document.getElementById("username").value
-let msg = document.getElementById("messageInput").value
-
 /* gui */
 let logingui = document.getElementById("logingui")
 let settingsui = document.getElementById("settingsPage")
-let sidebar = document.getElementById("sidebar")
 let msgui = document.getElementById("maingui")
 let userbox = document.getElementById("userBox")
 let chatbar = document.getElementById("chatInputBar")
@@ -48,12 +42,12 @@ let loggingIn
 
 function login() {
 	loggingIn = true
-	startWebsocket(loggingIn, msg, wsServer, username)
+	startWebsocket(loggingIn)
 }
 
 function loginRegister() {
 	loggingIn = false
-	startWebsocket(loggingIn, msg, wsServer, username)
+	startWebsocket(loggingIn)
 }
 
 function deleteAllStorage() {
@@ -92,12 +86,14 @@ document.getElementById('user-popup-ok').onclick = function() {
 /* =================== WEBSOCKETS ;) ======================= */
 /* --------------------------------------------------------- */
 
-function startWebsocket(loggingIn, msg, wsServer, username) {
+function startWebsocket(loggingIn) {
+    let wsServer = document.getElementById("server").value
+    let username = document.getElementById("username").value
+    let password = document.getElementById("password").value
+
 	if (loggingIn == true) {
-        let password = document.getElementById("userpass").value
-		wsConnect("login", msg, wsServer, password, username)
+		wsConnect("login", wsServer, password, username)
 	} else {
-        let password = document.getElementById("userpass").value
-		wsConnect("register", msg, wsServer, password, username)
+		wsConnect("register", wsServer, password, username)
 	}
 }
