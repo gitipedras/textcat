@@ -18,7 +18,7 @@ var App = &Application{
 type WsIncome struct {
 	Rtype string `"json:Rtype"`
 	Username string `"json:Username"`
-	SessionToken string `"json:SessionToken"`
+	SessionToken string `"json:Password"` // change SessionToken to password later pls
 	Message string `"json:Message"`
 	ChannelID string `"json:ChannelID"`
 }
@@ -27,6 +27,7 @@ type WsSend struct {
 	Rtype string `"json:Rtype"`
 	Status string `"json:Status"`
 	Value string `"json:Value"`
+	Username string `"json:Username"`
 }
 
 /*

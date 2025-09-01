@@ -87,6 +87,8 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
 }
 
 func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
+    models.App.Log.Info("user register", slog.String("username", msg.Username))
+    
 	ok := database.CheckUser(msg.Username)
     if ok {
         // user already exists

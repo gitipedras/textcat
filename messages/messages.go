@@ -18,7 +18,7 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
-		models.App.Log.Error("[auth.go:8] Failed to Unmarshal json: %s", err)
+		models.App.Log.Error("[messages.go:21] Invalid json recieved from client: %s", err)
 	}
 	
 	switch data.Rtype {

@@ -18,6 +18,7 @@ You can just download the client and open it in your browser.
 - prevent users from logging in twice (session token spam)
 - prevent users from reconnecting to a channel
 - prevent users from connecting to two channels at once
+- prevent message spam
 
 **Client**
 

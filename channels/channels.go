@@ -26,34 +26,43 @@ func HandleMSG(username string, token string, message string, channelID string, 
 	if _, ok := ExistentChannels[channelID]; ok {
 		// channel exists
 
-		// define where we will store our values
 		allValues := []string{}
+		sent := make(map[string]bool) // <- move here
 
 		for _, value := range ExistentChannels {
-		    allValues = append(allValues, value...) // use ...
-		    models.App.Log.Info("processing values", slog.Any("values", allValues))
-
-		    // loop through every token and send a message
-		    for _, v := range allValues {
-		    	response := models.WsSend {
-		            Rtype:  "newMessage",
-		            Value:  message,
-			    }
-			    data, err := json.Marshal(response)
-			    if err != nil {
-			        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
-			        return
-			    }
-			    r := []byte(data)
-			    models.App.Log.Info("sending message to client", slog.Any("allValues", v), slog.Any("json response", r))
-
-		    	auth.SessionManager.SendToClient(v, r)
-		    }
-
+			allValues = append(allValues, value...)
 		}
+
+		// loop through every token and send a message
+		for _, v := range allValues {
+			if sent[v] {
+				continue // already sent to this token
+			}
+			response := models.WsSend{
+				Rtype:  "NewMessage",
+				Status: "newmsg",
+				Value:  message,
+				Username: username,
+			}
+			data, err := json.Marshal(response)
+			if err != nil {
+				models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+				return
+			}
+
+			models.App.Log.Info("broadcasting messages")
+			err = auth.SessionManager.SendToClient(v, data)
+			if err != nil {
+				models.App.Log.Error("Failed to send message", slog.String("err", err.Error()))
+			}
+			sent[v] = true
+			models.App.Log.Info("sent message to token", slog.String("token", v))
+		}
+
 		return
 
 	} else {
+		models.App.Log.Info("invalid channel", slog.String("chid", channelID))
 		response := models.WsSend {
 	            Rtype:   "invalidChannel",
 	            Status:  token,
@@ -103,22 +112,6 @@ func HandleMSG(username string, token string, message string, channelID string, 
 
 func ConnectUser(token string, channel string, conn *websocket.Conn) {
     models.App.Log.Info("user connected", slog.String("channel", channel), slog.String("token", token))
-
-   /* for _, t := range ExistentChannels[channel] {
-        if t == token {
-            response := models.WsSend {
-            Rtype:   "alreadyConnected",
-            Status:  token,
-	        }
-	        data, err := json.Marshal(response)
-	        if err != nil {
-	            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
-	            return
-	        }
-	        conn.WriteMessage(websocket.TextMessage, data)
-	        return
-        }
-    }*/
     ExistentChannels[channel] = append(ExistentChannels[channel], token)
     /*for channelName, clientTokens := range ExistentChannels {
 		fmt.Printf("Channel: %s, Clients: %v\n", channelName, clientTokens)
