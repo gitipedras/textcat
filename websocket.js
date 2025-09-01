@@ -1,8 +1,9 @@
 var userToken
 let currentChannel = "main";
 let msgInput = document.getElementById("messageInput")
+let username = document.getElementById("username").value
 
-function wsConnect(action, address, password, username) {
+function wsConnect(action, address, password) {
 // action is if ur signin in or registering
 // msg is the object with the input field
 // address is the object with the server address
@@ -19,6 +20,14 @@ function wsConnect(action, address, password, username) {
                 const channelName = link.getAttribute("data-channel");
                 connectChannel(channelName);
             });
+        });
+        msgInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {  // check if Enter was pressed
+                e.preventDefault();   // optional: prevent default form submission
+                writeMessage();        
+
+                messageInput.value = ""; // clear input after sending
+            }
         });
     }
 
@@ -58,7 +67,8 @@ function wsConnect(action, address, password, username) {
             case "loginStats":
                 if (msg.Status == "ok") {
                     userToken = msg.Value
-                    console.log("line 53: user token is: ", userToken)
+
+                    setDetails(msg.ServerName, msg.ServerDesc)
                     guiTransition()
                     inputInit()
                 } else {
@@ -101,15 +111,22 @@ function wsConnect(action, address, password, username) {
             */
 
             case "alreadyConnected":
-                showAlert("You are already connected to this channel!")
+                showAlert("You are already connected to a channel")
                 break;
 
-            /*
+            case "connectOk":
+                console.log("connection to channel ok")
+                break;
+
+            case "failed":
+                showAlert("Failed to send message, reason: ", msg.Status)
+                break;
+
+
             case "invalidSession":
                 showAlert("An invalid session was provided")
                 logout()
                 break;
-            */
 
             case "NewMessage":
                 console.log("New message: " + msg.Value)
@@ -159,7 +176,7 @@ function writeMessage() {
                 SessionToken: userToken,
                 ChannelID: currentChannel,
                 Message: msgValue,
-                Username: "dewier",
+                Username: username,
     };
     console.log("Sent message: ", payload)
     webSocket.send(JSON.stringify(payload));
@@ -180,4 +197,25 @@ function messageDisplay(username, message) {
     wrapper.appendChild(msgEl);
 
     messagesDiv.appendChild(wrapper);
+}
+
+function setDetails(name, desc) {
+    const sidebar = document.getElementById("sidebar");
+
+    // create footer container
+    const footer = document.createElement("div");
+    footer.id = "sidebar-footer"; // optional id for styling
+
+    // create name paragraph
+    const nameP = document.createElement("p");
+    nameP.textContent = name;
+    footer.appendChild(nameP);
+
+    // create description paragraph
+    const descP = document.createElement("p");
+    descP.textContent = desc;
+    footer.appendChild(descP);
+
+    // append footer to sidebar
+    sidebar.appendChild(footer);
 }
