@@ -23,6 +23,21 @@ var ExistentChannels = map[string][]string{
 
 
 func HandleMSG(username string, token string, message string, channelID string, conn *websocket.Conn) {
+	ok := auth.SessionManager.CheckByUsername(username, token)
+	if !ok {
+		response := models.WsSend {
+	            Rtype:   "invalidToken",
+	            Status:  token,
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
+		return;
+	}
+
 	if _, ok := ExistentChannels[channelID]; ok {
 		// channel exists
 

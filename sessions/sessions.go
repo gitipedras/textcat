@@ -55,6 +55,18 @@ func (sm *SessionManager) Get(token string) (*Session, bool) {
     return s, ok
 }
 
+// Returns true if the session exists and matches, otherwise false.
+func (sm *SessionManager) CheckByUsername(username, token string) bool {
+    sm.Mu.RLock()
+    defer sm.Mu.RUnlock()
+
+    session, ok := sm.Sessions[token]
+    if !ok || session == nil {
+        return false
+    }
+    return session.Username == username
+}
+
 func (sm *SessionManager) Exists(token string) bool {
     sm.Mu.RLock()
     defer sm.Mu.RUnlock()
