@@ -68,8 +68,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func main() {
+	loaderr := models.LoadConfig("config.json")
+   if loaderr != nil {
+      panic(loaderr)
+   }
+
+   models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
+
 	http.HandleFunc("/ws", wsHandler)
-	var port string = ":8080"
+	var port string = models.Config.Port
 
 	database.DbInit()
 

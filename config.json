@@ -1,3 +1,5 @@
 {
-  "Port": 8080
+    "ServerName": "Testcat",
+    "ServerDesc": "A simple server for testing and developing testcat.",
+    "Port": ":8080"
 }

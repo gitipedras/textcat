@@ -45,6 +45,8 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
                 Rtype:   "loginStats",
                 Status: "ok",
                 Value: token,
+                ServerName: models.Config.ServerName,
+                ServerDesc: models.Config.ServerDesc,
             }
 
             data, err := json.Marshal(msg)
