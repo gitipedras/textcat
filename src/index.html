@@ -37,11 +37,22 @@
 <div id="user-popup" class="userpopup">
   <div class="userpopup-content">
     <h2 id="user-popup-username"></h2>
-    <p id="user-popup-description"></p>
-    <p id="user-popup-date"></p>
+    <p id="user-rank"></p>
     <br>
     <p>Token (hover to show)</p>
-    <p id="user-popup-token"></p>
+    <a id="user-popup-token"></a>
+    <br><br>
+    <form id="statusForm">
+        <label for="status">Status</label>
+        <select name="status" id="statuses">
+            <option value="online">Online</option>
+            <option value="afk">AFK</option>
+            <option value="offline">Offline</option>
+        </select>
+        <br><br>
+        <input type="submit" value="Change">
+    </form>
+
     <button id="user-popup-ok">Close</button>
   </div>
 </div>
@@ -91,7 +102,7 @@
 </div>
 
 <div id="userBox">
-    <p id="usernamebox">Username</p>
+    <a id="usernamebox" style="color:blue;cursor:default;text-decoration:underline;">Username</a>
     <div>
         <button onclick="logout()" id="logoutbtn">Logout</button>
         <button onclick="openSettings()" id="modalBTN">Settings</button>

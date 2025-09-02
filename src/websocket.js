@@ -4,6 +4,23 @@ let msgInput = document.getElementById("messageInput")
 let username = document.getElementById("username").value
 alreadyRan = false
 
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission().then(permission => {
+            console.log("Notification permission:", permission);
+        });
+    }
+}
+
+function pushNotification(msg) {
+    if (Notification.permission === "granted") {
+        new Notification("Textcat Chat", {
+            body: msg,
+            icon: "/path/to/icon.png" // optional
+        });
+    }
+}
+
 function wsConnect(action, address, password) {
 // action is if ur signin in or registering
 // msg is the object with the input field
@@ -15,6 +32,8 @@ function wsConnect(action, address, password) {
     let sidebar = document.getElementById("sidebar")
     function inputInit() {
         console.log("input init")
+        requestNotificationPermission();
+
         document.querySelectorAll(".channel-link").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault(); // stop the "#" jump
@@ -97,7 +116,7 @@ function wsConnect(action, address, password) {
             case "invalidInput":
                 showAlert("Invalid Input: Messages cannot be empty or longer than 70 characters")
                 break;
-                
+
             case "kicked":
                 showAlert("Connection force-closed by the server");
                 logout();
@@ -247,6 +266,10 @@ function formatMessage(text) {
 }
 
 function messageDisplay(username, message) {
+    if (document.hidden) {
+        pushNotification(username + ": " + message);
+    }
+
     const messagesDiv = document.getElementById("messages");
 
     const wrapper = document.createElement("div");
@@ -289,3 +312,52 @@ function setDetails(name, desc) {
 function clearChat() {
     document.getElementById("messages").innerHTML = "";
 }
+
+let userpopupBox = document.getElementById("user-popup")
+let Pusername = document.getElementById("user-popup-username")
+let Ptoken = document.getElementById("user-popup-token")
+let Prank = document.getElementById("user-rank")
+
+function showUserPopup() {
+    Pusername.innerHTML = username
+    Ptoken.innerHTML = userToken
+    Ptoken.title = "Click to copy!";
+    //Prank.innerHTML = userRank
+    userpopupBox.style.display = 'block'
+}
+
+// Make it clickable
+Ptoken.style.cursor = "pointer"; // optional, shows pointer on hover
+Ptoken.onclick = () => {
+    const tokenText = Ptoken.textContent || Ptoken.innerText;
+    if (!tokenText) return;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(tokenText)
+        .then(() => {
+            alert("Token copied to clipboard!");
+        })
+        .catch(err => {
+            console.error("Failed to copy token:", err);
+        });
+};
+
+
+let usernameLink = document.getElementById("usernamebox")
+usernameLink.onclick = () => {
+    showUserPopup()
+
+    return false;
+};
+
+let currentStatus = ""; // variable to hold the value
+let statusForm = document.getElementById("statusForm")
+
+statusForm.onsubmit = (e) => {
+    e.preventDefault(); // stop page reload
+
+    const statusSelect = document.getElementById("statuses");
+    currentStatus = statusSelect.value;
+
+    console.log("Status set to:", currentStatus);
+};
