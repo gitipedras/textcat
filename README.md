@@ -27,3 +27,10 @@ Configuration is stored in `config.json`
 }
 
 ```
+
+## Version Control
+
+Client and server versions **are not matched**!
+
+Version system:
+`MAJOR`.`MINOR`.`PATCH`
