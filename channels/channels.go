@@ -80,7 +80,7 @@ func HandleMSG(username string, token string, message string, channelID string, 
 		models.App.Log.Info("invalid channel", slog.String("chid", channelID))
 		response := models.WsSend {
 	            Rtype:   "invalidChannel",
-	            Status:  token,
+	            Status:  "non-existent",
 	    }
 	    data, err := json.Marshal(response)
 	    if err != nil {
@@ -128,8 +128,70 @@ func HandleMSG(username string, token string, message string, channelID string, 
 func ConnectUser(token string, channel string, conn *websocket.Conn) {
     models.App.Log.Info("user connected", slog.String("channel", channel), slog.String("token", token))
     ExistentChannels[channel] = append(ExistentChannels[channel], token)
-    /*for channelName, clientTokens := range ExistentChannels {
-		fmt.Printf("Channel: %s, Clients: %v\n", channelName, clientTokens)
-	}*/
 
-}	
+}
+
+func DisconnectUser(token string, channel string, conn *websocket.Conn) {
+    users, ok := ExistentChannels[channel]
+    if !ok {
+        // step 1: channel doesn’t exist
+        response := models.WsSend {
+	           Rtype:   "disconnectStats",
+	           Status:  "NoChannelFound",
+	           Value: 	channel,
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
+
+        return
+    }
+
+    // step 2: check if token is present
+    found := false
+    newUsers := make([]string, 0, len(users))
+    for _, t := range users {
+        if t == token {
+            found = true
+            continue // skip this token → removes it
+        }
+        newUsers = append(newUsers, t)
+    }
+
+    if !found {
+        // channel exists but token not found
+        response := models.WsSend {
+	           Rtype:   "disconnectStats",
+	           Status:  "notConnected",
+	           Value: 	channel,
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
+        return
+    }
+
+    // step 3: replace with updated user list
+    ExistentChannels[channel] = newUsers
+
+    // success
+    response := models.WsSend {
+	           Rtype:   "disconnectStats",
+	           Status:  "ok",
+	           Value: 	channel,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+	    models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	    return
+	}
+	conn.WriteMessage(websocket.TextMessage, data)
+}
+
+		

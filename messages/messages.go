@@ -22,16 +22,22 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 	}
 	
 	switch data.Rtype {
+		/* authentication */
 		case "login":
 			auth.UserLogin(conn, data)
 
 		case "register":
 			auth.UserRegister(conn, data)
 
+		/* messaging */
 		case "message":
 			channels.HandleMSG(data.Username, data.SessionToken, data.Message, data.ChannelID, conn)
 		
+		/* channels */
 		case "connect":
 			channels.ConnectUser(data.SessionToken, data.ChannelID, conn)
+
+		case "disconnect":
+			channels.DisconnectUser(data.SessionToken, data.ChannelID, conn)
 	}
 }
