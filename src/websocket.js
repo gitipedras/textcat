@@ -78,6 +78,9 @@ function wsConnect(action, address, password) {
                     setDetails(msg.ServerName, msg.ServerDesc)
                     guiTransition()
                     inputInit()
+                } else if (msg.Status == "invalidInput") {
+                    showAlert("Invalid username: username must only contain normal letters (capital included), numbers and underscores. Dashes ('-') are not supported.")
+
                 } else {
                     showAlert("Invalid username or password")
                 }
@@ -91,6 +94,10 @@ function wsConnect(action, address, password) {
                 }
             break;
 
+            case "invalidInput":
+                showAlert("Invalid Input: Messages cannot be empty or longer than 70 characters")
+                break;
+                
             case "kicked":
                 showAlert("Connection force-closed by the server");
                 logout();

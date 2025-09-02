@@ -1,29 +1,48 @@
 #!/bin/bash
-# bundle.sh - Combine HTML, CSS, and JS into one file
+# bundle.sh - Combine HTML, CSS, and JS into one file with a custom title
 
 SRC_DIR="src"
 BUILD_DIR="build"
 OUTPUT="$BUILD_DIR/index.html"
 
+# Set the title
+TITLEVAR="Textcat Web Bundle"
+
 # Make sure build directory exists
 mkdir -p "$BUILD_DIR"
 
-# Start the output file with the HTML head from index.html
-# Up to the closing </head>
-awk '/<\/head>/{print "<style>"; system("cat '"$SRC_DIR"/style.css'"); print "</style>"; next}1' "$SRC_DIR/index.html" > "$OUTPUT"
+# Start building the HTML
+awk -v myTitle="$TITLEVAR" -v cssfile="$SRC_DIR/style.css" '
+/<head>/ { 
+    print
+    print "  <title>" myTitle "</title>"
+    print "  <style>"
+    while ((getline cssline < cssfile) > 0) print cssline
+    print "  </style>"
+    next
+}
+# Replace <h1>Login</h1> with actual title
+{
+    gsub(/<h1>Login<\/h1>/, "<h1>" myTitle "</h1>")
+    print
+}
+# Skip existing <script> blocks
+/<script>/,/<\/script>/ { next }
+' "$SRC_DIR/index.html" > "$OUTPUT"
 
-# Append JS files at the end of the body
-echo "<script>" >> "$OUTPUT"
-cat "$SRC_DIR/websocket.js" >> "$OUTPUT"
-echo "</script>" >> "$OUTPUT"
+# Insert JS just before </body>
+awk -v js1="$SRC_DIR/websocket.js" -v js2="$SRC_DIR/client.js" '
+/<\/body>/ {
+    print "<script>"
+    while ((getline line < js1) > 0) print line
+    print "</script>"
+    print "<script>"
+    while ((getline line < js2) > 0) print line
+    print "</script>"
+    print
+    next
+}
+{ print }
+' "$OUTPUT" > "$OUTPUT.tmp" && mv "$OUTPUT.tmp" "$OUTPUT"
 
-echo "<script>" >> "$OUTPUT"
-cat "$SRC_DIR/client.js" >> "$OUTPUT"
-echo "</script>" >> "$OUTPUT"
-
-# Add the closing </html> if not present
-if ! grep -q "</html>" "$OUTPUT"; then
-    echo "</html>" >> "$OUTPUT"
-fi
-
-echo "Bundled file created: $OUTPUT"
+echo "Bundled file created: $OUTPUT with title: $TITLEVAR"
