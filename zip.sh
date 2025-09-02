@@ -4,9 +4,9 @@
 ZIP_NAME="client.zip"
 
 # Files to include
-FILES=("client.js" "index.html" "README.md" "style.css" "websocket.js")
+FILES=("src/client.js" "src/index.html" "src/README.md" "src/style.css" "src/websocket.js")
 
 # Create the zip
 zip -r "$ZIP_NAME" "${FILES[@]}"
 
-echo "Created $ZIP_NAME with specified files."
+echo "Created $ZIP_NAME with files."
