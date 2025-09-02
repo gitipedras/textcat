@@ -7,7 +7,7 @@
 
 **Client**
 
-- check if fields are empty
+
 
 **Server code to eventually be used/added (ordered by importance)**
 
