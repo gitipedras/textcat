@@ -96,3 +96,26 @@ function startWebsocket(loggingIn) {
 		wsConnect("register", wsServer, password)
 	}
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const themeSelect = document.getElementById("themes");
+    const form = document.getElementById("themeForm");
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem("theme") || "light";
+    themeSelect.value = savedTheme;
+    applyTheme(savedTheme);
+
+    // Handle form submit
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const selectedTheme = themeSelect.value;
+        localStorage.setItem("theme", selectedTheme);
+        applyTheme(selectedTheme);
+    });
+
+    // Function to apply theme
+    function applyTheme(theme) {
+        document.body.setAttribute("data-theme", theme);
+    }
+});

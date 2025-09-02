@@ -2,6 +2,7 @@ var userToken
 let currentChannel = "main";
 let msgInput = document.getElementById("messageInput")
 let username = document.getElementById("username").value
+alreadyRan = false
 
 function wsConnect(action, address, password) {
 // action is if ur signin in or registering
@@ -17,6 +18,12 @@ function wsConnect(action, address, password) {
         document.querySelectorAll(".channel-link").forEach(link => {
             link.addEventListener("click", e => {
                 e.preventDefault(); // stop the "#" jump
+                clearChat()
+
+                if (alreadyRan == true) {
+                    disconnectChannel(currentChannel);
+                }
+
                 const channelName = link.getAttribute("data-channel");
                 connectChannel(channelName);
             });
@@ -94,10 +101,21 @@ function wsConnect(action, address, password) {
                 break;
 
             /* --- Client stuff --- */
+            case "disconnectStats":
+                if (msg.Status == "NoChannelFound") {
+                    showAlert("Channel doesn't exist: " + msg.Value)
+                } if (msg.Status == "notConnected" ) {
+                    showAlert("Not connected to channel: " + msg.Value)
+                } if (msg.Status == "ok" ) {
+                    console.log("disconnect ok")
+                } else {
+                    showAlert("Failed to disconnect, unknown reason. Possible internal server error")
+                }
+                break;
 
             case "invalidChannel":
-                showAlert("Invalid Channel: " + msg.Value)
-                console.warn("Invalid channel: " + msg.Value)
+                showAlert("Invalid Channel")
+                console.warn("Invalid channel")
                 break;
 
             case "unknownReq":
@@ -133,7 +151,7 @@ function wsConnect(action, address, password) {
                 break;
 
             case "NewMessage":
-                console.log("New message: " + msg.Value)
+                console.log("New message: " + msg.Value, " Sent by: " + msg.Username)
                 messageDisplay(msg.Username, msg.Value)
                 break;
 
@@ -145,8 +163,7 @@ function wsConnect(action, address, password) {
     };
 
     webSocket.onclose = function() {
-        console.log("WebSocket connection closed.");
-        //showAlert("Connection closed. Reason: unknown")
+        showAlert("Connection closed.");
     };
 
     webSocket.onerror = function(error) {
@@ -161,14 +178,29 @@ function logout() {
     webSocket.close();
 }
 
+function disconnectChannel() {
+    console.log("current channel is " + currentChannel)
+    msgValue = msgInput.value
+    let payload = {
+                Rtype: "disconnect",
+                SessionToken: userToken,
+                ChannelID: currentChannel,
+                Username: username,
+    };
+    console.log("Disconnecting: ", payload)
+    webSocket.send(JSON.stringify(payload));
+}
+
 function connectChannel(channel) {
+    alreadyRan = true
     msgValue = msgInput.value
     let payload = {
                 Rtype: "connect",
                 SessionToken: userToken,
                 ChannelID: channel,
-                Username: "dewier",
+                Username: username,
     };
+    currentChannel = channel
     console.log("Connected to channel: ", payload)
     webSocket.send(JSON.stringify(payload));
 }
@@ -180,10 +212,31 @@ function writeMessage() {
                 SessionToken: userToken,
                 ChannelID: currentChannel,
                 Message: msgValue,
-                Username: "NotDewier",
+                Username: username,
     };
     console.log("Sent message: ", payload)
     webSocket.send(JSON.stringify(payload));
+}
+
+function escapeHTML(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML; // safely escaped
+}
+
+function formatMessage(text) {
+    // Escape first (prevents <script> etc.)
+    let safe = escapeHTML(text);
+
+    // Markdown replacements
+    safe = safe
+        .replace(/^#### (.*$)/gim, "<h4>$1</h4>")  // #### heading4
+        .replace(/^### (.*$)/gim, "<h3>$1</h3>")  // ### heading3
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")   // **bold**
+        .replace(/\*(.*?)\*/g, "<i>$1</i>")      // *italic*
+        .replace(/#/g, "<br>");  // single # becomes a newline
+
+    return safe;
 }
 
 function messageDisplay(username, message) {
@@ -194,14 +247,16 @@ function messageDisplay(username, message) {
     const userEl = document.createElement("b");
     userEl.textContent = username + ": ";
 
-    const msgEl = document.createElement("span"); // <- use span instead of p
-    msgEl.textContent = message;
+    const msgEl = document.createElement("span");
+    msgEl.innerHTML = formatMessage(message); // safe + markdown
 
     wrapper.appendChild(userEl);
     wrapper.appendChild(msgEl);
 
     messagesDiv.appendChild(wrapper);
 }
+
+
 
 function setDetails(name, desc) {
     const sidebar = document.getElementById("sidebar");
@@ -222,4 +277,8 @@ function setDetails(name, desc) {
 
     // append footer to sidebar
     sidebar.appendChild(footer);
+}
+
+function clearChat() {
+    document.getElementById("messages").innerHTML = "";
 }
