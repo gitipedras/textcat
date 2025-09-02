@@ -1,5 +1,6 @@
 {
     "ServerName": "Testcat",
     "ServerDesc": "A simple server for testing and developing testcat.",
-    "Port": ":8080"
+    "Port": ":8080",
+    "MaxLength": 2
 }

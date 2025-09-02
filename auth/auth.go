@@ -13,12 +13,29 @@ import (
 	"textcat/database"
 	"textcat/models"
     "textcat/sessions"
+    "textcat/validator"
 )
 
 var SessionManager = sessions.NewSessionManager()
 
 
 func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
+    goodInput := validator.Username(msg.Username)
+    if !goodInput {
+        response := models.WsSend {
+            Rtype:   "loginStats",
+            Status:  "invalidInput",
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return
+        }
+        
+        conn.WriteMessage(websocket.TextMessage, data)
+        return
+    }
+
 	ok := database.CheckUser(msg.Username)
 	if ok {
 
@@ -90,7 +107,21 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
 
 func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
     models.App.Log.Info("user register", slog.String("username", msg.Username))
-    
+    goodInput := validator.Username(msg.Username)
+    if !goodInput {
+        response := models.WsSend {
+            Rtype:   "loginStats",
+            Status:  "invalidInput",
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return
+        }
+        
+        conn.WriteMessage(websocket.TextMessage, data)
+        return
+    }
 	ok := database.CheckUser(msg.Username)
     if ok {
         // user already exists

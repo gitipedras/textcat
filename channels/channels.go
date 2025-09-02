@@ -13,6 +13,7 @@ import (
 	/* internal */
 	"textcat/auth"
 	"textcat/models"
+	"textcat/validator"
 )
 
 var ExistentChannels = map[string][]string{
@@ -23,6 +24,21 @@ var ExistentChannels = map[string][]string{
 
 
 func HandleMSG(username string, token string, message string, channelID string, conn *websocket.Conn) {
+	validInput := validator.Message(message)
+	if !validInput {
+		response := models.WsSend {
+	            Rtype:   "invalidInput",
+	            Status:  "message",
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
+		return
+	}
+
 	ok := auth.SessionManager.CheckByUsername(username, token)
 	if !ok {
 		response := models.WsSend {
@@ -65,7 +81,6 @@ func HandleMSG(username string, token string, message string, channelID string, 
 				return
 			}
 
-			models.App.Log.Info("broadcasting messages")
 			err = auth.SessionManager.SendToClient(v, data)
 			if err != nil {
 				models.App.Log.Error("Failed to send message", slog.String("err", err.Error()))

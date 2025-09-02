@@ -19,6 +19,7 @@ type AppConfig struct {
     ServerName string `json:"ServerName"`
     ServerDesc string `json:"ServerDesc"`
     Port       string    `json:"Port"`
+    MaxLength  int    `json:"MaxLength"`
 }
 
 type WsIncome struct {
