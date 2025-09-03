@@ -57,12 +57,14 @@ func HandleMSG(username string, token string, message string, channelID string, 
 	if _, ok := ExistentChannels[channelID]; ok {
 		// channel exists
 
-		allValues := []string{}
+		/**allValues := []string{}
 		sent := make(map[string]bool) // <- move here
 
 		for _, value := range ExistentChannels {
 			allValues = append(allValues, value...)
-		}
+		}**/
+	allValues := ExistentChannels[channelID]
+	sent := make(map[string]bool)
 
 		// loop through every token and send a message
 		for _, v := range allValues {
@@ -141,12 +143,13 @@ func HandleMSG(username string, token string, message string, channelID string, 
 }
 
 func ConnectUser(token string, channel string, conn *websocket.Conn) {
-    models.App.Log.Info("user connected", slog.String("channel", channel), slog.String("token", token))
+    models.App.Log.Info("[CONNECT] user connect", slog.String("channel", channel), slog.String("token", token))
     ExistentChannels[channel] = append(ExistentChannels[channel], token)
 
 }
 
 func DisconnectUser(token string, channel string, conn *websocket.Conn) {
+    models.App.Log.Info("[DISCONNECT] user disconnect", slog.String("channel", channel), slog.String("token", token))
     users, ok := ExistentChannels[channel]
     if !ok {
         // step 1: channel doesn’t exist

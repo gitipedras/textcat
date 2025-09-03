@@ -42,7 +42,7 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
 
 		good := database.CheckPass(msg.Username, msg.SessionToken)
 		if good {
-			models.App.Log.Info("UserLogin", slog.String("username", msg.Username))
+			models.App.Log.Info("[LOGIN] user login", slog.String("username", msg.Username))
 		
             token, err := SessionManager.GenerateToken(16) // 16 bytes = 32 hex chars
             if err != nil {
@@ -107,7 +107,7 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
 }
 
 func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
-    models.App.Log.Info("user register", slog.String("username", msg.Username))
+    models.App.Log.Info("[REGISTER] user register", slog.String("username", msg.Username))
     goodInput := validator.Username(msg.Username)
     if !goodInput {
         response := models.WsSend {
@@ -169,7 +169,7 @@ func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
 
 
 func SessionTimer() {
-    models.App.Log.Info("Started session timer")
+    models.App.Log.Info("[SESSION TIMER] Started session timer")
 
     expiration := 5  * time.Hour
 
@@ -179,7 +179,7 @@ func SessionTimer() {
             if time.Since(session.ConnectedAt) > expiration {
                 delete(SessionManager.Sessions, token)
                 session.Conn.Close()
-                models.App.Log.Info("Expired session removed", slog.String("user", session.Username))
+                models.App.Log.Info("[SESSION TIMER] Expired session removed", slog.String("user", session.Username))
             }
         }
         SessionManager.Mu.Unlock()
