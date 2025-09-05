@@ -113,6 +113,7 @@ func UserRegister(conn *websocket.Conn, msg models.WsIncome) {
         response := models.WsSend {
             Rtype:   "loginStats",
             Status:  "invalidInput",
+            Value: msg.Username,
         }
         data, err := json.Marshal(response)
         if err != nil {
