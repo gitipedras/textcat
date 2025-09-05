@@ -6,6 +6,7 @@ import (
 
 	/* logging */
 	"log/slog"
+	"time"
 
 	/* websocket ?? */
 	"github.com/gorilla/websocket"
@@ -21,6 +22,8 @@ var ExistentChannels = map[string][]string{
 	"minecraft": {},
 	"minecraft-bedwars": {},
 }
+
+var mCache models.MessageCache
 
 
 func HandleMSG(username string, token string, message string, channelID string, conn *websocket.Conn) {
@@ -56,15 +59,9 @@ func HandleMSG(username string, token string, message string, channelID string, 
 
 	if _, ok := ExistentChannels[channelID]; ok {
 		// channel exists
-
-		/**allValues := []string{}
-		sent := make(map[string]bool) // <- move here
-
-		for _, value := range ExistentChannels {
-			allValues = append(allValues, value...)
-		}**/
-	allValues := ExistentChannels[channelID]
-	sent := make(map[string]bool)
+		mCache.AddMessage(username, message)
+		allValues := ExistentChannels[channelID]
+		sent := make(map[string]bool)
 
 		// loop through every token and send a message
 		for _, v := range allValues {
@@ -76,6 +73,7 @@ func HandleMSG(username string, token string, message string, channelID string, 
 				Status: "newmsg",
 				Value:  message,
 				Username: username,
+				Time: time.Now(),
 			}
 			data, err := json.Marshal(response)
 			if err != nil {
@@ -88,7 +86,7 @@ func HandleMSG(username string, token string, message string, channelID string, 
 				models.App.Log.Error("Failed to send message", slog.String("err", err.Error()))
 			}
 			sent[v] = true
-			models.App.Log.Info("sent message to token", slog.String("token", v))
+			models.App.Log.Info("[MESSAGES] sent message to token", slog.String("token", v))
 		}
 
 		return
@@ -143,6 +141,17 @@ func HandleMSG(username string, token string, message string, channelID string, 
 }
 
 func ConnectUser(token string, channel string, conn *websocket.Conn) {
+    // step 1: channel doesn’t exist
+        response := models.WsSend {
+	           Rtype:   "messageCache",
+	           MsgCache: mCache.Cache,
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
     models.App.Log.Info("[CONNECT] user connect", slog.String("channel", channel), slog.String("token", token))
     ExistentChannels[channel] = append(ExistentChannels[channel], token)
 
