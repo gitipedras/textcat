@@ -4,23 +4,6 @@ let msgInput = document.getElementById("messageInput")
 let username = document.getElementById("username").value
 alreadyRan = false
 
-function requestNotificationPermission() {
-    if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
-            console.log("Notification permission:", permission);
-        });
-    }
-}
-
-function pushNotification(msg) {
-    if (Notification.permission === "granted") {
-        new Notification("Textcat Chat", {
-            body: msg,
-            icon: "/path/to/icon.png" // optional
-        });
-    }
-}
-
 function wsConnect(action, address, password) {
 // action is if ur signin in or registering
 // msg is the object with the input field
@@ -32,7 +15,6 @@ function wsConnect(action, address, password) {
     let sidebar = document.getElementById("sidebar")
     function inputInit() {
         console.log("input init")
-        requestNotificationPermission();
 
         document.querySelectorAll(".channel-link").forEach(link => {
             link.addEventListener("click", e => {
@@ -128,14 +110,10 @@ function wsConnect(action, address, password) {
 
             /* --- Client stuff --- */
             case "disconnectStats":
-                if (msg.Status == "NoChannelFound") {
-                    showAlert("Channel doesn't exist: " + msg.Value)
-                } if (msg.Status == "notConnected" ) {
-                    showAlert("Not connected to channel: " + msg.Value)
-                } if (msg.Status == "ok" ) {
-                    console.log("disconnect ok")
+                if (msg.Status == "error") {
+                    showAlert("Error disconnecting " + msg.Value)
                 } else {
-                    showAlert("Failed to disconnect, unknown reason. Possible internal server error")
+                    console.log("disconnect ok")
                 }
                 break;
 
@@ -146,6 +124,12 @@ function wsConnect(action, address, password) {
 
             case "unknownReq":
                 console.warn("Outdated client or server, server sent unknownReq")
+                break;
+
+            case "messageCache":
+                for (const [username, message] of Object.entries(msg.MsgCache)) {
+                    messageDisplay(username, message);
+                }
                 break;
 
             /*case "isr":
@@ -162,8 +146,12 @@ function wsConnect(action, address, password) {
                 showAlert("You are already connected to a channel")
                 break;
 
-            case "connectOk":
-                console.log("connection to channel ok")
+            case "connectStats":
+                if (msg.Status == "error") {
+                    showAlert("Error disconnecting " + msg.Value)
+                } else {
+                    console.log("connect ok")
+                }
                 break;
 
             case "failed":
@@ -178,7 +166,7 @@ function wsConnect(action, address, password) {
 
             case "NewMessage":
                 console.log("New message: " + msg.Value, " Sent by: " + msg.Username)
-                messageDisplay(msg.Username, msg.Value)
+                messageDisplay(msg.Username, msg.Value, msg.Time)
                 break;
 
             default:
@@ -265,26 +253,64 @@ function formatMessage(text) {
     return safe;
 }
 
-function messageDisplay(username, message) {
-    if (document.hidden) {
-        pushNotification(username + ": " + message);
-    }
-
+function messageDisplay(username, message, time) {
     const messagesDiv = document.getElementById("messages");
 
     const wrapper = document.createElement("div");
 
+    // Username
     const userEl = document.createElement("b");
     userEl.textContent = username + ": ";
 
+    // Message
     const msgEl = document.createElement("span");
     msgEl.innerHTML = formatMessage(message); // safe + markdown
 
+    // Timestamp
+    const timeEl = document.createElement("span");
+    timeEl.style.color = "gray"; // make it gray
+    timeEl.style.marginLeft = "6px"; // optional spacing
+    const date = new Date(time);
+
+    if (isNaN(date.getTime())) {
+        // Invalid date
+        timeEl.textContent = "No Time";
+        timeEl.title = "No Time";
+    } else {
+        // Format hh:mm for display
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        timeEl.textContent = `${hours}:${minutes}`;
+
+        // Full human-readable tooltip: "July 3rd 2025 at 14:23:45"
+        const day = date.getDate();
+        const daySuffix = (d) => {
+            if (d > 3 && d < 21) return "th";
+            switch (d % 10) {
+                case 1: return "st";
+                case 2: return "nd";
+                case 3: return "rd";
+                default: return "th";
+            }
+        };
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        const fullTime = `${monthNames[date.getMonth()]} ${day}${daySuffix(day)} ${date.getFullYear()} at ${hours}:${minutes}:${String(date.getSeconds()).padStart(2,"0")}`;
+        timeEl.title = fullTime; // tooltip
+    }
+
+    // Append elements
     wrapper.appendChild(userEl);
     wrapper.appendChild(msgEl);
+    wrapper.appendChild(timeEl);
 
     messagesDiv.appendChild(wrapper);
 }
+
+
+
 
 
 
