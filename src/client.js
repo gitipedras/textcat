@@ -44,13 +44,16 @@ function guiTransition() {
 /* --------------------------------------------------------- */
 
 let loggingIn
+let cStats = document.getElementById("cStats")
 
 function login() {
+    cStats.innerHTML = 'Connecting to server...'
 	loggingIn = true
 	startWebsocket(loggingIn)
 }
 
 function loginRegister() {
+    cStats.innerHTML = 'Connecting to server...'
 	loggingIn = false
 	startWebsocket(loggingIn)
 }
@@ -93,7 +96,7 @@ document.getElementById('user-popup-ok').onclick = function() {
 
 function startWebsocket(loggingIn) {
     let wsServer = document.getElementById("server").value
-    let password = document.getElementById("password").value
+    let password = document.getElementById("password").value;
 
 	if (loggingIn == true) {
 		wsConnect("login", wsServer, password)
