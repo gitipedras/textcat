@@ -31,7 +31,7 @@ awk -v myTitle="$TITLEVAR" -v cssfile="$SRC_DIR/style.css" '
 ' "$SRC_DIR/index.html" > "$OUTPUT"
 
 # Insert JS just before </body>
-awk -v js1="$SRC_DIR/websocket.js" -v js2="$SRC_DIR/client.js" '
+awk -v js1="$SRC_DIR/websocket.js" -v js2="$SRC_DIR/client.js" -v js3="$SRC_DIR/clientconfig.js" '
 /<\/body>/ {
     print "<script>"
     while ((getline line < js1) > 0) print line
@@ -39,10 +39,14 @@ awk -v js1="$SRC_DIR/websocket.js" -v js2="$SRC_DIR/client.js" '
     print "<script>"
     while ((getline line < js2) > 0) print line
     print "</script>"
+    print "<script>"
+    while ((getline line < js3) > 0) print line
+    print "</script>"
     print
     next
 }
 { print }
 ' "$OUTPUT" > "$OUTPUT.tmp" && mv "$OUTPUT.tmp" "$OUTPUT"
+
 
 echo "Bundled file created: $OUTPUT with title: $TITLEVAR"

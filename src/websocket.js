@@ -1,10 +1,9 @@
 var userToken
 let currentChannel = "main";
 let msgInput = document.getElementById("messageInput")
-let username = document.getElementById("username").value
 alreadyRan = false
 
-function wsConnect(action, address, password) {
+function wsConnect(action, address, password, username) {
 // action is if ur signin in or registering
 // msg is the object with the input field
 // address is the object with the server address
@@ -127,8 +126,12 @@ function wsConnect(action, address, password) {
                 break;
 
             case "messageCache":
-                for (const [username, message] of Object.entries(msg.MsgCache)) {
-                    messageDisplay(username, message);
+                if (msg.MsgCache == null && msg.MsgCache == undefined) {
+
+                } else {
+                    for (const [username, message] of Object.entries(msg.MsgCache)) {
+                        messageDisplay(username, message);
+                    }
                 }
                 break;
 
@@ -220,13 +223,14 @@ function connectChannel(channel) {
 }
 
 function writeMessage() {
+    aUsername = document.getElementById("username").value
     msgValue = msgInput.value
     let payload = {
                 Rtype: "message",
                 SessionToken: userToken,
                 ChannelID: currentChannel,
                 Message: msgValue,
-                Username: username,
+                Username: aUsername,
     };
     console.log("Sent message: ", payload)
     webSocket.send(JSON.stringify(payload));
