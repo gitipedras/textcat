@@ -24,6 +24,7 @@ type AppConfig struct {
     ServerDesc string `json:"ServerDesc"`
     Port       string    `json:"Port"`
     MaxLength  int    `json:"MaxLength"`
+    CacheMessages bool `json:"CacheMessages"`
 }
 
 /* Ws Sending and Recieving */

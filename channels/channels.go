@@ -25,7 +25,6 @@ var ExistentChannels = map[string][]string{
 
 var mCache models.MessageCache
 
-
 func HandleMSG(username string, token string, message string, channelID string, conn *websocket.Conn) {
 	validInput := validator.Message(message)
 	if !validInput {
@@ -59,7 +58,9 @@ func HandleMSG(username string, token string, message string, channelID string, 
 
 	if _, ok := ExistentChannels[channelID]; ok {
 		// channel exists
-		mCache.AddMessage(username, message)
+		if models.Config.CacheMessages {
+			mCache.AddMessage(username, message)
+		}
 		allValues := ExistentChannels[channelID]
 		sent := make(map[string]bool)
 
@@ -104,40 +105,6 @@ func HandleMSG(username string, token string, message string, channelID string, 
 	    }
 	    conn.WriteMessage(websocket.TextMessage, data)
 	}
-
-	/*ok := auth.SessionManager.Exists(token)
-	if ok {
-		if clients, ok := ExistentChannels[channelID]; ok {
-    		for _, token := range clients {
-    			models.App.Log.Info("broadcasting messages")
-			    auth.SessionManager.SendToClient(token, []byte(message))
-			}
-		} else {
-			response := models.WsSend {
-	            Rtype:   "invalidChannel",
-	            Status:  token,
-	        }
-	        data, err := json.Marshal(response)
-	        if err != nil {
-	            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
-	            return
-	        }
-	        conn.WriteMessage(websocket.TextMessage, data)
-		}
-		
-	} else {
-		response := models.WsSend {
-	           Rtype:   "invalidSession",
-	           Status:  token,
-	    }
-	    data, err := json.Marshal(response)
-	    if err != nil {
-	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
-	        return
-	    }
-	    conn.WriteMessage(websocket.TextMessage, data)
-		}
-	}*/
 }
 
 func ConnectUser(token string, channel string, conn *websocket.Conn) {
