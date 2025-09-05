@@ -102,12 +102,14 @@
 </div>
 
 <div id="userBox">
+    <button id="sidebarToggle" class="hamburger">☰</button>
     <a id="usernamebox" style="color:blue;cursor:default;text-decoration:underline;">Username</a>
     <div>
         <button onclick="logout()" id="logoutbtn">Logout</button>
         <button onclick="openSettings()" id="modalBTN">Settings</button>
     </div>
 </div>
+
 
 <div id="maingui">
     <div id="messages"></div>
@@ -152,5 +154,11 @@ window.onclick = function(event) {
   }
 }
 </script>
+<script>
+document.getElementById("sidebarToggle").addEventListener("click", function() {
+  document.getElementById("sidebar").classList.toggle("active");
+});
+</script>
+
 </body>
 </html>

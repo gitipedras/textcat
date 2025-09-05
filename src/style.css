@@ -386,3 +386,123 @@ input {
 #user-popup-token:hover {
   filter: blur(0);
 }
+
+/* --- Mobile responsive layout --- */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    height: auto;
+    overflow: auto;
+  }
+
+  /* Sidebar becomes hidden off-screen by default */
+  #sidebar {
+    position: fixed;
+    top: 50px; /* below userBox */
+    left: -250px; /* hidden */
+    width: 220px;
+    height: calc(100% - 50px);
+    background-color: var(--sidebar-color);
+    transition: left 0.3s ease;
+    z-index: 1500;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  #sidebar.active {
+    left: 0; /* slide into view */
+  }
+
+  #sidebar h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  #channelsList {
+    font-size: 14px;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+  }
+
+  /* Main content takes full width */
+  #maingui {
+    border-radius: 0;
+    padding: 60px 10px 90px; /* leave space for userBox + chat bar */
+  }
+
+  /* User box pinned to top */
+  #userBox {
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 50px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    background-color: var(--null-color);
+    border-bottom: 1px solid #ccc;
+  }
+
+  #usernamebox {
+    flex-grow: 1;
+    text-align: left;
+  }
+
+  /* Chat input pinned to bottom */
+  #chatInputBar {
+    left: 0;
+    right: 0;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
+
+  #messageInput {
+    margin-right: 0;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  #sendButton {
+    width: 100%;
+  }
+
+  /* Login screen scales down */
+  #logingui {
+    width: 90%;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 15px;
+    height: auto;
+  }
+
+  /* Modal content */
+  .modal-content {
+    width: 95%;
+  }
+
+  /* Popups fit better */
+  .userpopup-content {
+    max-width: 90%;
+    padding: 15px;
+  }
+
+  /* Hamburger button */
+  .hamburger {
+    display: inline-block;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text-color);
+    margin-right: 8px;
+  }
+}
+
+/* Desktop: hide hamburger */
+@media (min-width: 769px) {
+  #sidebarToggle {
+    display: none;
+  }
+}
