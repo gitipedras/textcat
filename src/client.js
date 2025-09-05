@@ -97,7 +97,6 @@ document.getElementById('user-popup-ok').onclick = function() {
 function startWebsocket(loggingIn) {
     let wsServer = document.getElementById("server").value
     let password = document.getElementById("password").value;
-
 	if (loggingIn == true) {
 		wsConnect("login", wsServer, password)
 	} else {
