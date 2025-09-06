@@ -1,22 +1,127 @@
 package channels
 
 import (
-	/* data processing */
-	"encoding/json"
-
-	/* logging */
-	"log/slog"
 	"time"
+	"sync"
 
-	/* websocket ?? */
-	"github.com/gorilla/websocket"
-
-	/* internal */
+	/* internal packages */
 	"textcat/auth"
-	"textcat/models"
-	"textcat/validator"
 )
 
+var Channels ChannelHandler
+
+type ChannelHandler struct {
+	Mu sync.RWMutex
+	StartedAt time.Time
+	Channels map[string]Channel
+}
+
+type Channel struct {
+	// name is in the map
+	Description string
+	Connected map[string]string
+	Permissions map[string][]string
+	// permissions are not pre-specified
+	// meaning there are no default permissions
+	// the default perm is nothing
+	// use an addon to stop people from chatting
+	// on specific channels
+}
+
+// creates a channel
+func (ch *ChannelHandler) NewChannel(channelName string) {
+    ch.Mu.Lock()
+    defer ch.Mu.Unlock() // wait until method brackets end
+    channel := Channel{
+    	Description: "",
+    	Connected: make(map[string]string),
+    	Permissions: make(map[string][]string),
+    }
+    ch.Channels[channelName] = channel
+}
+
+func (h *ChannelHandler) AddUser(channelName, token, username string) {
+    h.Mu.Lock()
+    defer h.Mu.Unlock()
+
+    ch, ok := h.Channels[channelName]
+    if !ok {
+        // channel doesn't exist
+        return
+    }
+
+    if auth.SessionManager.Exists(token) {
+    	// Add user to the channel's Connected map
+    	ch.Connected[username] = token
+    } else {
+    	// failed to add: invalid token
+    }
+}
+
+func (h *ChannelHandler) RemoveUser(channelName, token, username string) {
+    h.Mu.Lock()
+    defer h.Mu.Unlock()
+
+    ch, ok := h.Channels[channelName]
+    if !ok {
+        // channel doesn't exist
+        return
+    }
+
+    // Only remove if the token matches the one stored for this username
+    if currentToken, exists := ch.Connected[username]; exists && currentToken == token {
+        delete(ch.Connected, username)
+    }
+}
+
+
+
+func (h *ChannelHandler) ChannelExists(channelName string) bool {
+    h.Mu.Lock()
+    defer h.Mu.Unlock()
+
+    _, ok := h.Channels[channelName]
+    if !ok {
+        // channel doesn't exist
+        return false
+    } else {
+    	// channel does exist
+    	return true
+    }
+}
+
+func (h *ChannelHandler) CheckPerm(channelName, username, permission string) bool {
+    h.Mu.RLock()
+    defer h.Mu.RUnlock()
+
+    ch, ok := h.Channels[channelName]
+    if !ok {
+        return false
+    }
+
+    for _, perm := range ch.Permissions[username] {
+        if perm == permission {
+            return true
+        }
+    }
+    return false
+}
+
+func (h *ChannelHandler) SendMessage(channelName, message, username, token string) bool {
+    h.Mu.Lock()
+    defer h.Mu.Unlock()
+
+    ok := Channels.ChannelExists(chnanelName)
+    if !ok {
+    	// channel does not exist
+    	return false
+    }
+}
+
+
+
+
+/*
 var ExistentChannels = map[string][]string{
 	"main":      {},
 	"minecraft": {},
@@ -189,3 +294,4 @@ func DisconnectUser(token string, channel string, conn *websocket.Conn) {
 }
 
 		
+*/

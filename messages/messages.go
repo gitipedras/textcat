@@ -35,9 +35,9 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		
 		/* channels */
 		case "connect":
-			channels.ConnectUser(data.SessionToken, data.ChannelID, conn)
+			channels.Channels.AddUser(data.ChannelID, data.SessionToken, data.Username)
 
 		case "disconnect":
-			channels.DisconnectUser(data.SessionToken, data.ChannelID, conn)
+			channels.Channels.RemoveUser(data.ChannelID, data.SessionToken, data.Username)
 	}
 }
