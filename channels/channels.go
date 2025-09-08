@@ -3,9 +3,13 @@ package channels
 import (
 	"time"
 	"sync"
+	"github.com/gorilla/websocket"
+	"encoding/json"
+	"log/slog"
 
 	/* internal packages */
 	"textcat/auth"
+	"textcat/models"
 )
 
 var Channels ChannelHandler
@@ -28,6 +32,22 @@ type Channel struct {
 	// on specific channels
 }
 
+//TODO: add lua options for default channels
+func ChannelsInit() {
+    Channels = ChannelHandler{
+        StartedAt: time.Now(),
+        Channels:  make(map[string]Channel), // must initialize
+    }
+
+    // example: add a "general" channel
+    Channels.Channels["main"] = Channel{
+        Description: "Main channel",
+        Connected:   make(map[string]string),
+        Permissions: make(map[string][]string),
+    }
+}
+
+
 // creates a channel
 func (ch *ChannelHandler) NewChannel(channelName string) {
     ch.Mu.Lock()
@@ -40,21 +60,54 @@ func (ch *ChannelHandler) NewChannel(channelName string) {
     ch.Channels[channelName] = channel
 }
 
-func (h *ChannelHandler) AddUser(channelName, token, username string) {
+func (h *ChannelHandler) AddUser(channelName, token, username string, conn *websocket.Conn) {
     h.Mu.Lock()
     defer h.Mu.Unlock()
 
     ch, ok := h.Channels[channelName]
     if !ok {
-        // channel doesn't exist
+        models.App.Log.Info("invalid channel", slog.String("chid", channelName))
+		response := models.WsSend {
+	            Rtype:   "invalidChannel",
+	            Status:  "non-existent",
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
         return
     }
 
     if auth.SessionManager.Exists(token) {
     	// Add user to the channel's Connected map
+    	models.App.Log.Info("[CONNECT] user connected", slog.String("token", token))
     	ch.Connected[username] = token
+    	models.App.Log.Info("valid channel", slog.String("chid", channelName))
+		response := models.WsSend {
+	            Rtype:   "connectStats",
+	            Status:  "ok",
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
+
     } else {
-    	// failed to add: invalid token
+    	models.App.Log.Info("invalid channel", slog.String("chid", channelName))
+		response := models.WsSend {
+	            Rtype:   "connectStats",
+	            Status:  "invalidToken",
+	    }
+	    data, err := json.Marshal(response)
+	    if err != nil {
+	        models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+	        return
+	    }
+	    conn.WriteMessage(websocket.TextMessage, data)
     }
 }
 
@@ -82,13 +135,11 @@ func (h *ChannelHandler) ChannelExists(channelName string) bool {
 
     _, ok := h.Channels[channelName]
     if !ok {
-        // channel doesn't exist
         return false
-    } else {
-    	// channel does exist
-    	return true
     }
+    return true
 }
+
 
 func (h *ChannelHandler) CheckPerm(channelName, username, permission string) bool {
     h.Mu.RLock()
@@ -107,16 +158,48 @@ func (h *ChannelHandler) CheckPerm(channelName, username, permission string) boo
     return false
 }
 
-func (h *ChannelHandler) SendMessage(channelName, message, username, token string) bool {
+func (h *ChannelHandler) SendMessage(channelName, message, username, token string, conn *websocket.Conn) bool {
     h.Mu.Lock()
     defer h.Mu.Unlock()
 
-    ok := Channels.ChannelExists(chnanelName)
+    ok := Channels.ChannelExists(channelName)
     if !ok {
-    	// channel does not exist
-    	return false
+        models.App.Log.Info("invalid channel", slog.String("chid", channelName))
+        response := models.WsSend{
+            Rtype:  "invalidChannel",
+            Status: "non-existent",
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return false
+        }
+        conn.WriteMessage(websocket.TextMessage, data)
+        return false
     }
+
+
+    // channel exists!
+	// TODO: prevent spam
+	ch := Channels.Channels[channelName]
+
+	// track users who already received the message
+	sent := make(map[string]struct{})
+
+	for _, token := range ch.Connected {
+	    if _, ok := sent[token]; ok {
+	        continue // already sent
+	    }
+
+	    models.App.Log.Info("[MESSAGE] sending message", slog.String("token", token))
+	    auth.SessionManager.SendToClient(token, []byte(message))
+	    sent[token] = struct{}{}
+	}
+
+	return true
+
 }
+
 
 
 

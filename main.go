@@ -16,6 +16,7 @@ import (
 	"textcat/models"
 	"textcat/auth"
 	"textcat/database"
+	"textcat/channels"
 
 )
 
@@ -75,6 +76,8 @@ func main() {
 
    models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
 
+   channels.ChannelsInit()
+
 	http.HandleFunc("/ws", wsHandler)
 	var port string = models.Config.Port
 
@@ -91,5 +94,6 @@ func main() {
 		fmt.Println("Error starting server:", err)
 	}
 
+	models.App.Log.Info("Stopping...")
 	defer database.DB.Close()
 }
