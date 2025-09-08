@@ -16,18 +16,23 @@ function wsConnect(action, address, password, username) {
         console.log("input init")
 
         document.querySelectorAll(".channel-link").forEach(link => {
-            link.addEventListener("click", e => {
-                e.preventDefault(); // stop the "#" jump
-                clearChat()
+    link.addEventListener("click", e => {
+        e.preventDefault(); // stop the "#" jump
+        clearChat();
 
-                if (alreadyRan == true) {
-                    disconnectChannel(currentChannel);
-                }
+        if (alreadyRan === true) {
+            disconnectChannel(currentChannel);
+        }
 
-                const channelName = link.getAttribute("data-channel");
-                connectChannel(channelName);
-            });
-        });
+        const channelName = link.getAttribute("data-channel");
+        connectChannel(channelName);
+
+        // make clicked link bold
+        document.querySelectorAll(".channel-link").forEach(l => l.classList.remove("active-channel"));
+        link.classList.add("active-channel");
+    });
+});
+
         msgInput.addEventListener("keydown", function(e) {
             if (e.key === "Enter") {  // check if Enter was pressed
                 e.preventDefault();   // optional: prevent default form submission
@@ -152,8 +157,10 @@ function wsConnect(action, address, password, username) {
             case "connectStats":
                 if (msg.Status == "error") {
                     showAlert("Error disconnecting " + msg.Value)
+                } else if (msg.Status == "invalidToken") {
+                    showAlert("Invalid token: please reload this page and login again, if the issue persists, contact an administrator.")
                 } else {
-                    console.log("connect ok")
+                    console.log("connect OK")
                 }
                 break;
 
@@ -198,11 +205,12 @@ function logout() {
 function disconnectChannel() {
     console.log("current channel is " + currentChannel)
     msgValue = msgInput.value
+    usernameV = username.value
     let payload = {
                 Rtype: "disconnect",
                 SessionToken: userToken,
                 ChannelID: currentChannel,
-                Username: username,
+                Username: usernameV,
     };
     console.log("Disconnecting: ", payload)
     webSocket.send(JSON.stringify(payload));
@@ -211,11 +219,12 @@ function disconnectChannel() {
 function connectChannel(channel) {
     alreadyRan = true
     msgValue = msgInput.value
+    usernameV = username.value
     let payload = {
                 Rtype: "connect",
                 SessionToken: userToken,
                 ChannelID: channel,
-                Username: username,
+                Username: usernameV,
     };
     currentChannel = channel
     console.log("Connected to channel: ", payload)

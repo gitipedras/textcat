@@ -506,3 +506,7 @@ input {
     display: none;
   }
 }
+
+.channel-link.active-channel {
+    font-weight: bold;
+}
