@@ -32,8 +32,20 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 
 		/* messaging */
 		case "message":
-			channels.Channels.SendMessage(data.ChannelID, data.Message, data.Username, data.SessionToken, conn)
-		
+			sendOk := channels.Channels.SendMessage(data.ChannelID, data.Message, data.Username, data.SessionToken, conn)
+			if sendOk == false {
+				// error occurred while trying to send
+				response := models.WsSend{
+		            Rtype:  "isr",
+		            Status: "sendMessage",
+		        }
+		        data, err := json.Marshal(response)
+		        if err != nil {
+		            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+		            return
+		        }
+		        conn.WriteMessage(websocket.TextMessage, data)
+			}
 		/* channels */
 		case "connect":
 			channels.Channels.AddUser(data.ChannelID, data.SessionToken, data.Username, conn)
