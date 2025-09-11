@@ -71,8 +71,8 @@ function wsConnect(action, address, password, username) {
 
     webSocket.onmessage = function(event) {
 
+        console.log("--- server: ", event.data)
         const msg = JSON.parse(event.data);
-        console.log("message is ", msg)
 
         switch (msg.Rtype) {
             /* --- Loggin In and Registering */
@@ -140,11 +140,11 @@ function wsConnect(action, address, password, username) {
                 }
                 break;
 
-            /*case "isr":
-                showAlert("[Server] Internal Server Error")
+            case "isr":
+                showAlert("[Server] Internal Server Error: " + msg.Status)
                 logout()
                 break;
-            */
+            
 
             case "invalidToken":
                 showAlert("An invalid token was provided to the server -- please login again.")
@@ -358,7 +358,13 @@ let Ptoken = document.getElementById("user-popup-token")
 let Prank = document.getElementById("user-rank")
 
 function showUserPopup() {
-    Pusername.innerHTML = username
+    if (username.value == "admin" ) {
+        Pusername.innerHTML = username.value
+        Pusername.style.color = "gold"
+        Pusername.style.cursor = "crosshair"
+    } else {
+        Pusername.innerHTML = username.value
+    }
     Ptoken.innerHTML = userToken
     Ptoken.title = "Click to copy!";
     //Prank.innerHTML = userRank

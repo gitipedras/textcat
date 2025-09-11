@@ -11,14 +11,15 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-    --background-color: #0B6B3E; /* dark green-black instead of light mint */
-    --text-color: #FAFAF9;       /* flip text to the light mint */
-    --accent-color: #14BF6F;     /* keep accent the same */
-    --sidebar-color: #109557;    /* deeper green for sidebar */
-    --null-color: #074126;       /* near-black neutral background */
-    --logoutbtn-color: #d50f0f;
-    --logoutbtn-color-hover: #d50f0f;
+    --background-color: #121212;
+    --text-color: #EAEAEA;
+    --accent-color: #14BF6F;   /* keep accent consistent */
+    --sidebar-color: #1E1E1E;
+    --null-color: #2A2A2A;     /* soft dark gray for "neutral" background */
+    --logoutbtn-color: #ff4d4d;
+    --logoutbtn-color-hover: #ff3333;
 }
+
 
 /* High contrast theme */
 [data-theme="blue"] {
@@ -509,4 +510,16 @@ input {
 
 .channel-link.active-channel {
     font-weight: bold;
+}
+
+#channelList a {
+  text-decoration: none;
+  font-weight: normal;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+#channelsList a:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
