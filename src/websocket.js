@@ -3,6 +3,31 @@ let currentChannel = "main";
 let msgInput = document.getElementById("messageInput")
 alreadyRan = false
 
+function newChannelGUI() {
+  let channelName = document.getElementById("newChannelName");
+  let createChannelButton = document.getElementById("submitCreateChannel");
+  document.getElementById('newCh').style.display = 'block'
+
+  console.log("opened gui")
+
+  // attach click listener
+  createChannelButton.onclick = () => {
+    let payload = {
+      Rtype: "create",
+      Username: "",
+      SessionToken: userToken,
+      ChannelID: channelName.value  // grab typed text
+    };
+
+    console.log("Sent create channel request, data: " + JSON.stringify(payload));
+    webSocket.send(JSON.stringify(payload));
+
+    // close modal after sending
+    document.getElementById("newCh").style.display = "none";
+  };
+}
+
+
 function wsConnect(action, address, password, username) {
 // action is if ur signin in or registering
 // msg is the object with the input field
@@ -41,6 +66,15 @@ function wsConnect(action, address, password, username) {
                 messageInput.value = ""; // clear input after sending
             }
         });
+
+        let payload = {
+                    Rtype: "channelsList",
+                    Username: username,
+                    SessionToken: password,
+                };
+            console.log("Sent login request to server at", address)
+            webSocket.send(JSON.stringify(payload));
+
     }
 
 
@@ -98,6 +132,26 @@ function wsConnect(action, address, password, username) {
                     showAlert("Username is taken")
                 }
             break;
+
+            case "channelList": {
+                console.log("new channel list: ", msg);
+
+                let listEl = document.getElementById("channelList");
+
+                // clear existing list EXCEPT for "main"
+                listEl.innerHTML = `<li><a href="#" class="channel-link" data-channel="main">main</a></li>`;
+
+                // loop channels from server
+                for (const [name, count] of Object.entries(msg.ChannelList)) {
+                    if (name === "main") continue; // keep default main untouched
+                    let li = document.createElement("li");
+                    li.innerHTML = `<a href="#" class="channel-link" data-channel="${name}">${name} (${count})</a>`;
+                    listEl.appendChild(li);
+                }
+                break;
+            }
+
+
 
             case "invalidInput":
                 showAlert("Invalid Input: Messages cannot be empty or longer than 70 characters")
