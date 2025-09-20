@@ -46,6 +46,7 @@ type WsSend struct {
 	ServerName string `"json:ServerName"`
 	ServerDesc string `"json:ServerDesc"`
 	MsgCache map[string]string `json:"MsgCache"`
+	ChannelList map[string]int `json:"ChannelList"`
 	Time  time.Time `json:"Time"`
 }
 

@@ -47,8 +47,13 @@ func ChannelsInit() {
     }
 }
 
+// meant for clients
+func (ch *ChannelHandler) CreateChannel(channelName string, token string, username string) {
+     ch.NewChannel(channelName)
+}
 
-// creates a channel
+
+// addons and backend
 func (ch *ChannelHandler) NewChannel(channelName string) {
     ch.Mu.Lock()
     defer ch.Mu.Unlock() // wait until method brackets end
@@ -59,6 +64,18 @@ func (ch *ChannelHandler) NewChannel(channelName string) {
     }
     ch.Channels[channelName] = &channel
 }
+
+func (h *ChannelHandler) BuildChannelList() map[string]int {
+    h.Mu.RLock()
+    defer h.Mu.RUnlock()
+
+    result := make(map[string]int)
+    for name, ch := range h.Channels {
+        result[name] = len(ch.Connected)
+    }
+    return result
+}
+
 
 func (h *ChannelHandler) AddUser(channelName, token, username string, conn *websocket.Conn) {
     h.Mu.Lock()
