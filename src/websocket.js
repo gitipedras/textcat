@@ -3,30 +3,39 @@ let currentChannel = "main";
 let msgInput = document.getElementById("messageInput")
 alreadyRan = false
 
-function newChannelGUI() {
-  let channelName = document.getElementById("newChannelName");
-  let createChannelButton = document.getElementById("submitCreateChannel");
-  document.getElementById('newCh').style.display = 'block'
+// A named function to handle the channel link click event
+const channelLinkClickHandler = e => {
+    e.preventDefault(); // stop the "#" jump
+    clearChat();
 
-  console.log("opened gui")
+    // The 'this' keyword inside an arrow function needs to be handled
+    // We get the channel name directly from the event target
+    const link = e.currentTarget; 
 
-  // attach click listener
-  createChannelButton.onclick = () => {
-    let payload = {
-      Rtype: "create",
-      Username: "",
-      SessionToken: userToken,
-      ChannelID: channelName.value  // grab typed text
-    };
+    if (alreadyRan === true) {
+        disconnectChannel(currentChannel);
+    }
 
-    console.log("Sent create channel request, data: " + JSON.stringify(payload));
-    webSocket.send(JSON.stringify(payload));
+    const channelName = link.getAttribute("data-channel");
+    connectChannel(channelName);
 
-    // close modal after sending
-    document.getElementById("newCh").style.display = "none";
-  };
+    // make clicked link bold
+    document.querySelectorAll(".channel-link").forEach(l => l.classList.remove("active-channel"));
+    link.classList.add("active-channel");
+};
+
+
+// A reusable function to apply the listeners to all channel links
+function bindChannelListeners() {
+    console.log("Binding channel link listeners...");
+    document.querySelectorAll(".channel-link").forEach(link => {
+        // Use a flag to prevent attaching the listener multiple times to the same element
+        if (!link.classList.contains('listeners-bound')) {
+            link.addEventListener("click", channelLinkClickHandler);
+            link.classList.add('listeners-bound');
+        }
+    });
 }
-
 
 function wsConnect(action, address, password, username) {
 // action is if ur signin in or registering
@@ -40,41 +49,25 @@ function wsConnect(action, address, password, username) {
     function inputInit() {
         console.log("input init")
 
-        document.querySelectorAll(".channel-link").forEach(link => {
-    link.addEventListener("click", e => {
-        e.preventDefault(); // stop the "#" jump
-        clearChat();
+        // Call the new function to bind listeners (initial bind)
+        bindChannelListeners(); 
 
-        if (alreadyRan === true) {
-            disconnectChannel(currentChannel);
+        // Find the main channel and visually mark it as active on first login
+        const mainLink = document.querySelector('.channel-link[data-channel="main"]');
+        if (mainLink) {
+            mainLink.classList.add("active-channel");
+            // NOTE: If you want 'main' to be connected on login, 
+            // you would call connectChannel("main") here or inside loginStats
         }
 
-        const channelName = link.getAttribute("data-channel");
-        connectChannel(channelName);
-
-        // make clicked link bold
-        document.querySelectorAll(".channel-link").forEach(l => l.classList.remove("active-channel"));
-        link.classList.add("active-channel");
-    });
-});
-
+        // Your existing message input listener
         msgInput.addEventListener("keydown", function(e) {
-            if (e.key === "Enter") {  // check if Enter was pressed
-                e.preventDefault();   // optional: prevent default form submission
-                writeMessage();        
-
-                messageInput.value = ""; // clear input after sending
+            if (e.key === "Enter") {
+                e.preventDefault();
+                writeMessage();
+                messageInput.value = "";
             }
         });
-
-        let payload = {
-                    Rtype: "channelsList",
-                    Username: username,
-                    SessionToken: password,
-                };
-            console.log("Sent login request to server at", address)
-            webSocket.send(JSON.stringify(payload));
-
     }
 
 
@@ -117,9 +110,20 @@ function wsConnect(action, address, password, username) {
                     setDetails(msg.ServerName, msg.ServerDesc)
                     guiTransition()
                     inputInit()
+
+                let payload = {
+                    Rtype: "channelsList",
+                    Username: username,
+                    SessionToken: password,
+                };
+                console.log("Sent channels list req to server at", address)
+                webSocket.send(JSON.stringify(payload));
+
                 } else if (msg.Status == "invalidInput") {
                     showAlert("Invalid username: username must only contain normal letters (capital included), numbers and underscores. Dashes ('-') are not supported.")
 
+                } else if (msg.Status == "alreadyLoggedIn") {
+                    showAlert("Already logged in: A session already exists for this user")
                 } else {
                     showAlert("Invalid username or password")
                 }
@@ -133,6 +137,10 @@ function wsConnect(action, address, password, username) {
                 }
             break;
 
+            case "invalidInput":
+                showAlert("Invalid Input: Messages cannot be empty or longer than 70 characters")
+                break;
+
             case "channelList": {
                 console.log("new channel list: ", msg);
 
@@ -141,21 +149,19 @@ function wsConnect(action, address, password, username) {
                 // clear existing list EXCEPT for "main"
                 listEl.innerHTML = `<li><a href="#" class="channel-link" data-channel="main">main</a></li>`;
 
-                // loop channels from server
+                // loop channels from server and create new <li> elements
                 for (const [name, count] of Object.entries(msg.ChannelList)) {
-                    if (name === "main") continue; // keep default main untouched
+                    if (name === "main") continue;
                     let li = document.createElement("li");
                     li.innerHTML = `<a href="#" class="channel-link" data-channel="${name}">${name} (${count})</a>`;
                     listEl.appendChild(li);
                 }
+                
+                // re-bind listeners to include the new channels
+                bindChannelListeners(); 
+
                 break;
             }
-
-
-
-            case "invalidInput":
-                showAlert("Invalid Input: Messages cannot be empty or longer than 70 characters")
-                break;
 
             case "kicked":
                 showAlert("Connection force-closed by the server");

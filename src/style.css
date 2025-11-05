@@ -1,9 +1,9 @@
 /* Default theme (light) */
 :root {
-    --background-color: #C3F9DF;
-    --text-color: #02170D;
-    --accent-color: #14BF6F;
-    --sidebar-color: #14BF6F;
+    --background-color: #999999;
+    --text-color: #252525;
+    --accent-color: #c1763c;
+    --sidebar-color: #c1763c;
     --null-color: #f9f9f9; /* used as a white or a black, mainly for gui backgrounds to not make the text look confusing */
     --logoutbtn-color: #d50f0f;
     --logoutbtn-color-hover: #d50f0f;
@@ -13,7 +13,7 @@
 [data-theme="dark"] {
     --background-color: #121212;
     --text-color: #EAEAEA;
-    --accent-color: #14BF6F;   /* keep accent consistent */
+    --accent-color: #754825;   /* keep accent consistent */
     --sidebar-color: #1E1E1E;
     --null-color: #2A2A2A;     /* soft dark gray for "neutral" background */
     --logoutbtn-color: #ff4d4d;
@@ -23,24 +23,23 @@
 
 /* High contrast theme */
 [data-theme="blue"] {
-    --background-color: #C1CFFF;
+    --background-color: #384049;
     --text-color: #00061A;
-    --accent-color: #059BFF;
-    --sidebar-color: #bad7fc;
-    --null-color: #EFF6FF;
+    --accent-color: #5b7795;
+    --sidebar-color: #5b7795;
+    --null-color: #3e5e82;
     --logoutbtn-color: #901659;
     --logoutbtn-color-hover: #901659;
 }
 
-  body {
+body {
       font-family: Arial, sans-serif;
       background-color: var(--background-color);
       color: var(--text-color);
       margin: 0;
       line-height: 1.5;
       display: flex;
-      height: 100vh;
-      overflow: hidden;
+      height: auto;
   }
 
 button {
@@ -228,11 +227,11 @@ input {
   #logingui {
   background: var(--null-color);
   max-width: 700px;
-  width: 500px;
+  width: auto;
   margin: 20px auto 30px;
   padding: 20px 25px;
   border-radius: 8px;
-  height: 374px;
+  height: auto;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   }
 
