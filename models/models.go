@@ -27,6 +27,14 @@ type AppConfig struct {
     CacheMessages bool `json:"CacheMessages"`
 }
 
+// used for addons
+type CommandData struct {
+        Channel string
+        Message string
+        Username string
+        Token string
+}
+
 /* Ws Sending and Recieving */
 // recieved from client
 type WsIncome struct {

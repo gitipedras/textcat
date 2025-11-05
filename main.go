@@ -17,6 +17,7 @@ import (
 	"textcat/auth"
 	"textcat/database"
 	"textcat/channels"
+	"textcat/addons"
 
 )
 
@@ -49,6 +50,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
        if err != nil {
           mutex.Lock()
           delete(clients, conn)
+          auth.SessionManager.Remove()
           mutex.Unlock()
           break
        }
@@ -82,6 +84,7 @@ func main() {
 	var port string = models.Config.Port
 
 	database.DbInit()
+	addons.AddonsInit()
 
 	models.App.Log.Info("starting network server...", slog.String("port", port))
 

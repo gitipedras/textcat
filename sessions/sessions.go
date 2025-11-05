@@ -56,15 +56,22 @@ func (sm *SessionManager) Get(token string) (*Session, bool) {
 }
 
 // Returns true if the session exists and matches, otherwise false.
-func (sm *SessionManager) CheckByUsername(username, token string) bool {
+func (sm *SessionManager) CheckByUsername(username string) bool {
+    // Acquire a Read Lock to safely iterate over the map
     sm.Mu.RLock()
     defer sm.Mu.RUnlock()
 
-    session, ok := sm.Sessions[token]
-    if !ok || session == nil {
-        return false
+    // The range loop iterates over the keys (token) and values (session) of the map
+    for _, session := range sm.Sessions {
+        // You should also check if the session pointer is nil, just in case
+        if session != nil && session.Username == username {
+            // Found a matching session for the given username
+            return true
+        }
     }
-    return session.Username == username
+
+    // If the loop completes without finding a match
+    return false
 }
 
 func (sm *SessionManager) Exists(token string) bool {

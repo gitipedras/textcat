@@ -20,6 +20,23 @@ var SessionManager = sessions.NewSessionManager()
 
 
 func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
+    /*exists := SessionManager.CheckByUsername(msg.Username)
+    if exists {
+        response := models.WsSend {
+            Rtype:   "loginStats",
+            Status:  "alreadyLoggedIn",
+            Value: msg.Username,
+        }
+        data, err := json.Marshal(response)
+        if err != nil {
+            models.App.Log.Error("Failed to marshal JSON", slog.String("err", err.Error()))
+            return
+        }
+        
+        conn.WriteMessage(websocket.TextMessage, data)
+        return
+    }*/
+
     goodInput := validator.Username(msg.Username)
     if !goodInput {
         response := models.WsSend {

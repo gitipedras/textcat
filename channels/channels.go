@@ -6,10 +6,12 @@ import (
 	"github.com/gorilla/websocket"
 	"encoding/json"
 	"log/slog"
+    "strings"
 
 	/* internal packages */
 	"textcat/auth"
 	"textcat/models"
+    "textcat/addons"
 )
 
 var Channels ChannelHandler
@@ -45,11 +47,6 @@ func ChannelsInit() {
         Connected:   make(map[string]string),
         Permissions: make(map[string][]string),
     }
-}
-
-// meant for clients
-func (ch *ChannelHandler) CreateChannel(channelName string, token string, username string) {
-     ch.NewChannel(channelName)
 }
 
 
@@ -197,6 +194,21 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         return false
     }
 
+
+    data := models.CommandData{
+        Channel: channelName,
+        Message: message,
+        Username: username,
+        Token: token,
+    }
+
+    if strings.HasPrefix(message, "/") {
+        models.App.Log.Info("Recieved command!", slog.String("cmd", message ))
+        cmd := strings.TrimPrefix(message, "/")
+        addons.HandleCommand(cmd, data)
+        return true
+    }
+
     models.App.Log.Info("message OK, sending...")
 
     sent := make(map[string]struct{})
@@ -228,3 +240,5 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
 
     return true
 }
+
+
