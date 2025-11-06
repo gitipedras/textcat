@@ -3,6 +3,7 @@ package addons
 import (
 	"github.com/yuin/gopher-lua"
 	"fmt"
+	"os"
 
 	// internal
 	"textcat/models"
@@ -24,7 +25,8 @@ func AddonsInit() {
 
 	// Load a Lua file
 	if err := L.DoFile("commands.lua"); err != nil {
-		panic(err)
+		fmt.Println("[ADDONS ERROR]", err)
+		os.Exit(1)
 	}
 }
 

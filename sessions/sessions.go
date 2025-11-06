@@ -94,6 +94,42 @@ func (sm *SessionManager) Remove(token string) {
     delete(sm.Sessions, token)
 }
 
+// Removes a session USING their *websocket.Conn
+func (sm *SessionManager) RemoveByConn(conn *websocket.Conn) {
+    // Acquire a Read Lock first to safely find the token associated with the conn.
+    // We use a Read Lock here to allow other concurrent read operations.
+    sm.Mu.RLock()
+
+    var tokenToRemove string
+    found := false
+
+    // Iterate through the map to find the Session that holds the matching *websocket.Conn
+    for token, session := range sm.Sessions {
+        // Ensure the session is not nil and the connection pointer matches
+        if session != nil && session.Conn == conn {
+            tokenToRemove = token
+            found = true
+            break // Found the session, stop iterating
+        }
+    }
+
+    sm.Mu.RUnlock() // Release the Read Lock before potentially acquiring a Write Lock
+
+    if found {
+        // Acquire a Write Lock to safely perform the deletion
+        sm.Mu.Lock()
+        defer sm.Mu.Unlock()
+
+        // Double-check existence or re-find in case map changed between locks
+        // However, for this use-case, a simple delete is often sufficient
+        // given the session was just found.
+        delete(sm.Sessions, tokenToRemove)
+
+        // Optionally log the removal
+        models.App.Log.Info("Session removed by connection", slog.String("token", tokenToRemove))
+    }
+}
+
 // SendToClient sends a message to a single session
 func (sm *SessionManager) SendToClient(token string, message []byte) error {
     sm.Mu.RLock()

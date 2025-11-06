@@ -50,7 +50,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
        if err != nil {
           mutex.Lock()
           delete(clients, conn)
-          auth.SessionManager.Remove()
+          auth.SessionManager.RemoveByConn(conn)
           mutex.Unlock()
           break
        }

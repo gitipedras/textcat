@@ -20,7 +20,7 @@ var SessionManager = sessions.NewSessionManager()
 
 
 func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
-    /*exists := SessionManager.CheckByUsername(msg.Username)
+    exists := SessionManager.CheckByUsername(msg.Username)
     if exists {
         response := models.WsSend {
             Rtype:   "loginStats",
@@ -35,7 +35,7 @@ func UserLogin(conn *websocket.Conn, msg models.WsIncome) {
         
         conn.WriteMessage(websocket.TextMessage, data)
         return
-    }*/
+    }
 
     goodInput := validator.Username(msg.Username)
     if !goodInput {
