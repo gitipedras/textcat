@@ -17,7 +17,6 @@ import (
 	"textcat/auth"
 	"textcat/database"
 	"textcat/channels"
-	"textcat/addons"
 
 )
 
@@ -55,36 +54,25 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
           break
        }
        messages.HandleMSG(conn, message)
-
-       //broadcast <- message
     }
 }
-
-/*func handleMessages() {
-	for {
-		// Grab the next message from the broadcast channel
-		message := <-broadcast
-
-		messages.HandleMSG(message)
-	}
-}*/
 
 
 func main() {
 	loaderr := models.LoadConfig("config.json")
    if loaderr != nil {
-      panic(loaderr)
+      fmt.Println(loaderr)
+      fmt.Println("Please create a config.json")
    }
 
    models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
 
    channels.ChannelsInit()
+   database.DbInit()
 
 	http.HandleFunc("/ws", wsHandler)
 	var port string = models.Config.Port
 
-	database.DbInit()
-	addons.AddonsInit()
 
 	models.App.Log.Info("starting network server...", slog.String("port", port))
 

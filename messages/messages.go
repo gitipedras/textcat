@@ -91,6 +91,7 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		        }
 		        conn.WriteMessage(websocket.TextMessage, data)
 			}
+			
 		/* channels */
 		case "connect":
 			wentOk := validator.Message(data.Username)

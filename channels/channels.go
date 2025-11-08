@@ -11,7 +11,6 @@ import (
 	/* internal packages */
 	"textcat/auth"
 	"textcat/models"
-    "textcat/addons"
 )
 
 var Channels ChannelHandler
@@ -172,6 +171,7 @@ func (h *ChannelHandler) CheckPerm(channelName, username, permission string) boo
     return false
 }
 
+// used for users sending stuff
 func (h *ChannelHandler) SendMessage(channelName, message, username, token string, conn *websocket.Conn) bool {
     h.Mu.Lock()
     defer h.Mu.Unlock()
@@ -195,21 +195,14 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
     }
 
 
-    data := models.CommandData{
-        Channel: channelName,
-        Message: message,
-        Username: username,
-        Token: token,
-    }
-
     if strings.HasPrefix(message, "/") {
         models.App.Log.Info("Recieved command!", slog.String("cmd", message ))
-        cmd := strings.TrimPrefix(message, "/")
-        addons.HandleCommand(cmd, data)
         return true
     }
 
-    models.App.Log.Info("message OK, sending...")
+    //debug stuff that isn't really interesting
+    //models.App.Log.Info("[MESSAGES] message OK, sending...")
+
 
     sent := make(map[string]struct{})
     for _, userToken := range ch.Connected {
