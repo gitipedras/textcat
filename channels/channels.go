@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"time"
+    "time"
 	"sync"
 	"github.com/gorilla/websocket"
 	"encoding/json"
@@ -11,9 +11,8 @@ import (
 	/* internal packages */
 	"textcat/auth"
 	"textcat/models"
+    "textcat/database"
 )
-
-var Channels ChannelHandler
 
 type ChannelHandler struct {
 	Mu sync.RWMutex
@@ -33,23 +32,9 @@ type Channel struct {
 	// on specific channels
 }
 
-//TODO: add lua options for default channels
-func ChannelsInit() {
-    Channels = ChannelHandler{
-        StartedAt: time.Now(),
-        Channels:  make(map[string]*Channel), // must initialize
-    }
-
-    // example: add a "general" channel
-    Channels.Channels["main"] = &Channel{
-        Description: "Main channel",
-        Connected:   make(map[string]string),
-        Permissions: make(map[string][]string),
-    }
-}
 
 
-// addons and backend
+// backend
 func (ch *ChannelHandler) NewChannel(channelName string) {
     ch.Mu.Lock()
     defer ch.Mu.Unlock() // wait until method brackets end
@@ -59,6 +44,13 @@ func (ch *ChannelHandler) NewChannel(channelName string) {
     	Permissions: make(map[string][]string),
     }
     ch.Channels[channelName] = &channel
+
+    ok := database.AddChannel(channelName)
+    if ok == false {
+        //models.App.Log.Error("Failed to create channel!")
+        //panic("Failed to create a channel: Possible database or channels error")
+        // db can return false if channel exists, no need to panic
+    }
 }
 
 func (h *ChannelHandler) BuildChannelList() map[string]int {
@@ -123,6 +115,21 @@ func (h *ChannelHandler) AddUser(channelName, token, username string, conn *webs
 	    conn.WriteMessage(websocket.TextMessage, data)
     }
 }
+
+func (h *ChannelHandler) RemoveTokenFromAllChannels(token string) {
+    h.Mu.Lock()
+    defer h.Mu.Unlock()
+
+    for _, ch := range h.Channels {
+        for username, currentToken := range ch.Connected {
+            if currentToken == token {
+                delete(ch.Connected, username)
+            }
+        }
+    }
+}
+
+
 
 func (h *ChannelHandler) RemoveUser(channelName, token, username string) {
     h.Mu.Lock()

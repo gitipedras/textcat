@@ -1,23 +1,29 @@
-### TODO
+## TODO
 
-**Server**
+### Server
 
-- prevent users from logging in twice (session token spam)
-- prevent message spam
+**now**
+- add user priveliges (functional ex: "Admin", "Bot") and ranks (decor ex: "Premium", "VIP")
+- add statuses (user statuses)
+- add support for more databases
+- send EVERY USER a new channels list every 1min
 
-**Client**
+**later**
+- add VC channel type
+- add addons (modding with lua)
+- ssl encryption
 
-- make a desktop  version with electron or some other thing
+<!--> DONE
 
-**Server code to eventually be used/added (ordered by importance)**
+- add channels to database
+- add user count in channels
 
-```golang
-s := &http.Server{
-	Addr:           ":8080",
-	Handler:        myHandler,
-	ReadTimeout:    10 * time.Second,
-	WriteTimeout:   10 * time.Second,
-	MaxHeaderBytes: 1 << 20,
-}
-log.Fatal(s.ListenAndServe())
-```
+
+gorm.io
+<!-->
+
+### Client
+
+- make a desktop  version with electron or wails
+- add a bar to show which users are connected to a specific channel
+- hide password when typing it (ex: "bob" becomes "***")

@@ -95,7 +95,7 @@ func (sm *SessionManager) Remove(token string) {
 }
 
 // Removes a session USING their *websocket.Conn
-func (sm *SessionManager) RemoveByConn(conn *websocket.Conn) {
+func (sm *SessionManager) RemoveByConn(conn *websocket.Conn)  string {
     // Acquire a Read Lock first to safely find the token associated with the conn.
     // We use a Read Lock here to allow other concurrent read operations.
     sm.Mu.RLock()
@@ -128,6 +128,8 @@ func (sm *SessionManager) RemoveByConn(conn *websocket.Conn) {
         // Optionally log the removal
         models.App.Log.Info("Session removed by connection", slog.String("token", tokenToRemove))
     }
+
+    return tokenToRemove
 }
 
 // SendToClient sends a message to a single session

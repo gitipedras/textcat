@@ -16,8 +16,7 @@ import (
 	"textcat/models"
 	"textcat/auth"
 	"textcat/database"
-	"textcat/channels"
-
+	"textcat/core"
 )
 
 
@@ -49,7 +48,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
        if err != nil {
           mutex.Lock()
           delete(clients, conn)
-          auth.SessionManager.RemoveByConn(conn)
+          removedToken := auth.SessionManager.RemoveByConn(conn)
+		  core.Channels.RemoveTokenFromAllChannels(removedToken)
           mutex.Unlock()
           break
        }
@@ -67,14 +67,14 @@ func main() {
 
    models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
 
-   channels.ChannelsInit()
    database.DbInit()
+   core.ChannelsInit()
 
 	http.HandleFunc("/ws", wsHandler)
 	var port string = models.Config.Port
 
 
-	models.App.Log.Info("starting network server...", slog.String("port", port))
+	models.App.Log.Info("[INIT] Starting network server...", slog.String("port", port))
 
 	// if you put this goroutine after it will never be executed
 	go auth.SessionTimer()
@@ -82,7 +82,8 @@ func main() {
 	err := http.ListenAndServe(port, nil)
 
 	if err != nil {
-		fmt.Println("Error starting server:", err)
+		//models.App.Log.Error("[ERROR] Error starting server:", slog.Any("err", err))
+		panic(err)
 	}
 
 	models.App.Log.Info("Stopping...")

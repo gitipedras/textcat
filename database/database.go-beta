@@ -1,0 +1,41 @@
+package main
+
+import (
+	"fmt"
+)
+
+type MariaDb struct {
+	connection string
+}
+
+func (m MariaDb) Connect(server string) error {
+	fmt.Printf("connected mariadb to server: %s\n", server)
+	return nil
+}
+
+type Sqlite3 struct {
+	connection string
+}
+
+func (s Sqlite3) Connect(server string) error {
+	fmt.Printf("connected to sqlite server: %s\n", server)
+	return nil
+}
+
+type Databases interface {
+	Connect(server string) error
+}
+
+func main() {
+	var db Databases  // interface variable
+
+	var database_to_use string = "mariadb"
+
+	if database_to_use == "mariadb"  {
+		db = MariaDb{}
+		db.Connect("mariadb.local")
+	} else {
+		db = Sqlite3{}
+		db.Connect("database.db")
+	}
+}

@@ -4,8 +4,8 @@ import (
 	/* internal */
 	"textcat/auth"
 	"textcat/models"
-	"textcat/channels"
 	"textcat/validator"
+	"textcat/core"
 
 	/* websocket*/
 	"github.com/gorilla/websocket"
@@ -77,7 +77,7 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		        return
 			}
 
-			sendOk := channels.Channels.SendMessage(data.ChannelID, data.Message, data.Username, data.SessionToken, conn)
+			sendOk := core.Channels.SendMessage(data.ChannelID, data.Message, data.Username, data.SessionToken, conn)
 			if sendOk == false {
 				// error occurred while trying to send
 				response := models.WsSend{
@@ -108,7 +108,7 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		        conn.WriteMessage(websocket.TextMessage, data)
 		        return
 			}
-			channels.Channels.AddUser(data.ChannelID, data.SessionToken, data.Username, conn)
+			core.Channels.AddUser(data.ChannelID, data.SessionToken, data.Username, conn)
 
 		case "disconnect":
 			wentOk := validator.Message(data.Username)
@@ -125,13 +125,13 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		        conn.WriteMessage(websocket.TextMessage, data)
 		        return
 			}
-			channels.Channels.RemoveUser(data.ChannelID, data.SessionToken, data.Username)
+			core.Channels.RemoveUser(data.ChannelID, data.SessionToken, data.Username)
 
 		case "channelsList":
 			response := models.WsSend{
 			    Rtype:      "channelList",
 			    Status:     "ok",
-			    ChannelList: channels.Channels.BuildChannelList(),
+			    ChannelList: core.Channels.BuildChannelList(),
 			    Time:       time.Now(),
 			}
 			data, err := json.Marshal(response)

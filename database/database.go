@@ -10,20 +10,28 @@ import (
 	"log/slog"
 )
 
-var DB *sql.DB
 var err error
+var DB *sql.DB
+
+////////////////////////////////////////////
+//
+//   DATABASE CHECKS
+//
+//
+///////////////////////////////////////////
+
 
 func DbInit() {
-	/////// --- connect to the database --- ///////
+    /////// --- connect to the database --- ///////
 
-	// Connect to the SQLite database
+    // Connect to the SQLite database
     DB, err = sql.Open("sqlite3", "./appdata.db")
     if err != nil {
         models.App.Log.Error("Failed to connect to database: ", slog.String("err", err.Error()))
         return
     }
 
-    models.App.Log.Info("Connected to the SQLite database successfully.")
+    models.App.Log.Info("[DATABASE] Connected to the SQLite database successfully.")
 
     /////// --- database checks --- ///////
     /* DBC means database checks */
@@ -38,10 +46,89 @@ func DbInit() {
 );`
     _, err = DB.Exec(userDBC)
     if err != nil {
-        models.App.Log.Error("Failed to run database checks", slog.String("err", err.Error()))
+        models.App.Log.Error("[DATABASE CHECKS] Failed to run database checks", slog.String("err", err.Error()))
+    }
+
+        channelsDBC := `
+    CREATE TABLE IF NOT EXISTS channels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    extraData BLOB NULL
+);`
+    _, err = DB.Exec(channelsDBC)
+    if err != nil {
+        models.App.Log.Error("[DATABASE CHECKS] Failed to run database checks", slog.String("err", err.Error()))
     }
 
 }
+
+////////////////////////////////////////////
+//
+//   CHANNELS
+//
+//
+///////////////////////////////////////////
+
+// used for creating channels that are stored in the database
+func GetAllChannels() ([]string, error) {
+    rows, err := DB.Query("SELECT name FROM channels")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var result []string
+    for rows.Next() {
+        var name string
+        if err := rows.Scan(&name); err != nil {
+            return nil, err
+        }
+        result = append(result, name)
+    }
+
+    return result, rows.Err()
+}
+
+
+func CheckChannel(name string) bool {
+    var id int
+    err := DB.QueryRow("SELECT id FROM channels WHERE name = ?", name).Scan(&id)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            // channel does not exist
+            return false
+        }
+        models.App.Log.Error("[DATABASE] Failed to check if channel exists", slog.String("err", err.Error()))
+    }
+    return true // channel exists
+}
+
+func AddChannel(name string) bool {
+    exists := CheckChannel(name)
+    if exists == true {
+        // channel exists
+        return false
+    }
+    var extraData string
+    query := `
+        INSERT INTO channels (name, extraData)
+        VALUES (?, ?)
+    `
+    _, err := DB.Exec(query, name, extraData)
+    if err != nil {
+        models.App.Log.Error("[DATABASE] Failed to create channel", slog.String("err", err.Error()))
+        return false
+    }
+    return true
+}
+
+////////////////////////////////////////////
+//
+//   USERS
+//
+//
+///////////////////////////////////////////
+
 
 func CheckUser(username string) bool {
     var id int
@@ -51,7 +138,7 @@ func CheckUser(username string) bool {
             // user does not exist
             return false
         }
-        models.App.Log.Error("Failed to check if user exists", slog.String("err", err.Error()))
+        models.App.Log.Error("[DATABASE] Failed to check if user exists", slog.String("err", err.Error()))
     }
     return true // user exists
 }
