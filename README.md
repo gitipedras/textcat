@@ -1,19 +1,22 @@
-# textcat (still in beta!)
-A simple chat application made using golang and javascript
+# textcat
+A simple chat application made using the ultimate golang.
+
+Webiste: Coming Soon!
+
 
 ## Features
 
 ### Client
-**Textcat does not require any app! You can run it in your browser**
 
-Find on the client on the `client` branch.
-You can just download the client and open it in your browser.
+You can use any client, as long as its compatible with the textcat protocol.
+Official client here: [Source Code](redirect.textcat.net/)
 
 ### Server
 
 - Login and create an account
 - Talk with other people
-- Addons (beta)
+- Addons (coming soon)
+- Self-host textcat
 
 ## Server Configuration
 
@@ -30,12 +33,9 @@ Configuration is stored in `config.json`
 
 ```
 
-## Addons (beta)
-Addons allow you to use lua code to create custom commands!
-
 ## Version Control
 
-Client and server versions **are not matched**!
+The official server and client versions **are not matched**!
 
 Version system:
 `MAJOR`.`MINOR`.`PATCH`
