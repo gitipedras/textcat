@@ -32,4 +32,4 @@ build:
 	done
 
 archive:
-	@zip -r build-latest.zip build
+	@zip -r Textcat_Server_All_Platforms_(x64-arm64).zip build

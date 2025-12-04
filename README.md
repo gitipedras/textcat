@@ -18,6 +18,11 @@ Official client here: [Source Code](redirect.textcat.net/)
 - Addons (coming soon)
 - Self-host textcat
 
+## Building a zip (for github releases)
+`make`
+
+This builds for windows, darwin (macos) and linux for x86 and arm64, then compresses them into a zip file.
+
 ## Server Configuration
 
 Configuration is stored in `config.json`
