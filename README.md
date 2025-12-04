@@ -24,14 +24,18 @@ Configuration is stored in `config.json`
 
 ```json
 {
-    "ServerName": "Server Name", // Only used for clients
-    "ServerDesc": "Short Description", // Only used for clients
-    "Port": ":8080", // port to host http server HOST:PORT use :PORT for localhost
-    "MaxLength": 2, // maximum message length
-    "CacheMessages": false
+    "ServerName": "Server Name", // Short and readable name
+    "ServerDesc": "Short Description", // Description, recommended up to 3 lines (for official client)
+    "Port": ":8080", // port to host http server HOST:PORT. Use :PORT for localhost
+    "MaxLength": 2 // maximum message length
 }
 
 ```
+
+<!--
+random option that does not work yet
+"CacheMessages": false
+-->
 
 ## Version Control
 
