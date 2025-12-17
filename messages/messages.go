@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"time"
+	//"fmt"
 )
 
 func HandleMSG(conn *websocket.Conn, msg []byte) {
@@ -24,6 +25,8 @@ func HandleMSG(conn *websocket.Conn, msg []byte) {
 		models.App.Log.Error("[messages.go:21] Invalid json recieved from client:", slog.Any("error", err))
 	}
 	
+	//fmt.Println(string(msg))
+
 	switch data.Rtype {
 		/* authentication */
 		case "login":

@@ -102,7 +102,7 @@ func (h *ChannelHandler) AddUser(channelName, token, username string, conn *webs
 	    conn.WriteMessage(websocket.TextMessage, data)
 
     } else {
-    	models.App.Log.Info("invalid channel", slog.String("chid", channelName))
+    	models.App.Log.Info("invalid token to connect to channel", slog.String("chid", channelName))
 		response := models.WsSend {
 	            Rtype:   "connectStats",
 	            Status:  "invalidToken",
@@ -224,7 +224,8 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
 				Value:  message,
 				Username: username,
 				Time: time.Now(),
-			}
+
+	}			
 		data, failed := json.Marshal(message4Client)
 		if failed != nil {
 			models.App.Log.Error("Failed to parse json! ", slog.Any("error", failed))

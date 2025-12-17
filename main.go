@@ -60,15 +60,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	loaderr := models.LoadConfig("config.json")
-   if loaderr != nil {
-      fmt.Println(loaderr)
-      fmt.Println("Please create a config.json")
-   }
+   	if loaderr != nil {
+    	fmt.Println(loaderr)
+      	fmt.Println("Please create a config.json")
+   	}
 
-   models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
+   	models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
 
-   database.DbInit()
-   core.ChannelsInit()
+	database.DbInit()
+	core.ChannelsInit()
 
 	http.HandleFunc("/ws", wsHandler)
 	var port string = models.Config.Port
