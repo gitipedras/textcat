@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/websocket"
 	"encoding/json"
 	"log/slog"
-    "strings"
 
 	/* internal packages */
 	"textcat/auth"
@@ -202,10 +201,78 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
     }
 
 
-    if strings.HasPrefix(message, "/") {
+    /*if strings.HasPrefix(message, "/") {
         models.App.Log.Info("Recieved command!", slog.String("cmd", message ))
         return true
+    }*/
+
+
+    if message == "/hi" {
+
+        message4Client := models.WsSend{
+				Rtype:  "NewMessage",
+				Status: "newmsg",
+				Value:  "Hello!",
+				Username: "Server",
+				Time: time.Now(),
+
+	    }			
+		data, failed := json.Marshal(message4Client)
+		if failed != nil {
+			models.App.Log.Error("Failed to parse json! ", slog.Any("error", failed))
+			return false
+		}
+		
+        err := auth.SessionManager.SendToClient(token, []byte(data))
+        if err != nil {
+            models.App.Log.Error("failed to send", slog.String("err", err.Error()), slog.String("token", token))
+        }
+        return true
+
+    } else if message == "/about" {
+        message4Client := models.WsSend{
+				Rtype:  "NewMessage",
+				Status: "newmsg",
+				Value:  "This server is running textcat server official!",
+				Username: "Server",
+				Time: time.Now(),
+
+	    }			
+		data, failed := json.Marshal(message4Client)
+		if failed != nil {
+			models.App.Log.Error("Failed to parse json! ", slog.Any("error", failed))
+			return false
+		}
+		
+        err := auth.SessionManager.SendToClient(token, []byte(data))
+        if err != nil {
+            models.App.Log.Error("failed to send", slog.String("err", err.Error()), slog.String("token", token))
+        }
+        return true
+
+    } else if message == "/source" {
+
+        message4Client := models.WsSend{
+				Rtype:  "NewMessage",
+				Status: "newmsg",
+				Value:  "Source -> github.com/gitipedras/textcat",
+				Username: "Server",
+				Time: time.Now(),
+
+	    }			
+		data, failed := json.Marshal(message4Client)
+		if failed != nil {
+			models.App.Log.Error("Failed to parse json! ", slog.Any("error", failed))
+			return false
+		}
+		
+        err := auth.SessionManager.SendToClient(token, []byte(data))
+        if err != nil {
+            models.App.Log.Error("failed to send", slog.String("err", err.Error()), slog.String("token", token))
+        }
+        return true
     }
+
 
     //debug stuff that isn't really interesting
     //models.App.Log.Info("[MESSAGES] message OK, sending...")
@@ -239,7 +306,7 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         sent[userToken] = struct{}{}
     }
 
-    return true
+    return false
 }
 
 
