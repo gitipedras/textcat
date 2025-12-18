@@ -29,13 +29,18 @@ Configuration is stored in `config.json`
 
 ```json
 {
-    "ServerName": "Server Name", // Short and readable name
-    "ServerDesc": "Short Description", // Description, recommended up to 3 lines (for official client)
-    "Port": ":8080", // port to host http server HOST:PORT. Use :PORT for localhost
-    "MaxLength": 2 // maximum message length
+    "ServerName": "Server Name",
+    "ServerDesc": "Short Description",
+    "Port": ":8080",
+    "MaxLength": 150
 }
 
 ```
+
+**ServerName**: set a name for the server
+**ServerDesc**: description of your server
+**Port**: port to host the chat/http server
+**MaxLength**: maximum length for a message
 
 <!--
 random option that does not work yet
