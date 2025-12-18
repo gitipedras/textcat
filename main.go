@@ -61,8 +61,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	loaderr := models.LoadConfig("config.json")
    	if loaderr != nil {
-    	fmt.Println(loaderr)
-      	fmt.Println("Please create a config.json")
+    		panic(loaderr)
    	}
 
    	models.App.Log.Info("Server Details", slog.String("ServerName", models.Config.ServerName), slog.String("ServerDesc", models.Config.ServerDesc))
