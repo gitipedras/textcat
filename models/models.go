@@ -25,6 +25,8 @@ type AppConfig struct {
     Port       string    `json:"Port"`
     MaxLength  int    `json:"MaxLength"`
     CacheMessages bool `json:"CacheMessages"`
+    MaxCachedMessages int `json:"MaxCachedMessages"`
+    ServerIcon []byte `json:"ServerIcon"`
 }
 
 // used for addons

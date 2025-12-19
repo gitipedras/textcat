@@ -10,9 +10,11 @@ import (
 var Channels channels.ChannelHandler
 
 func ChannelsInit() {
+
     Channels = channels.ChannelHandler{
         StartedAt: time.Now(),
         Channels:  make(map[string]*channels.Channel), // must initialize
+        MessageCache: make(map[string][]channels.CachedMessage),
     }
 
     Channels.NewChannel("main")

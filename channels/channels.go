@@ -5,18 +5,22 @@ import (
 	"sync"
 	"github.com/gorilla/websocket"
 	"encoding/json"
-	"log/slog"
+    "log/slog"
 
 	/* internal packages */
 	"textcat/auth"
 	"textcat/models"
     "textcat/database"
-)
+)   
+
+var MaxMessages_Cache = models.Config.MaxCachedMessages
+var MessageCacheEnabled = models.Config.CacheMessages
 
 type ChannelHandler struct {
 	Mu sync.RWMutex
 	StartedAt time.Time
 	Channels map[string]*Channel
+    MessageCache map[string][]CachedMessage
 }
 
 type Channel struct {
@@ -30,6 +34,13 @@ type Channel struct {
 	// use an addon to stop people from chatting
 	// on specific channels
 }
+
+type CachedMessage struct {
+	Username string
+	Message  string
+	Time     time.Time
+}
+
 
 
 
@@ -99,6 +110,30 @@ func (h *ChannelHandler) AddUser(channelName, token, username string, conn *webs
 	        return
 	    }
 	    conn.WriteMessage(websocket.TextMessage, data)
+
+        if MessageCacheEnabled {
+            // Send the cached messages
+            if messages, ok := h.MessageCache[channelName]; ok {
+                for _, msg := range messages {
+                    response := models.WsSend{
+                        Rtype:    "NewMessage",
+                        Status:   "newmsg",
+                        Value:    msg.Message,
+                        Username: msg.Username,
+                        Time:     msg.Time,
+                    }
+
+                    data, err := json.Marshal(response)
+                    if err != nil {
+                        return
+                    }
+                    conn.WriteMessage(websocket.TextMessage, data)
+                }
+            }
+        }
+
+
+
 
     } else {
     	models.App.Log.Info("invalid token to connect to channel", slog.String("chid", channelName))
@@ -200,11 +235,23 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         return false
     }
 
+    if MessageCacheEnabled == true {
 
-    /*if strings.HasPrefix(message, "/") {
-        models.App.Log.Info("Recieved command!", slog.String("cmd", message ))
-        return true
-    }*/
+        h.MessageCache[channelName] = append(
+            h.MessageCache[channelName],
+            CachedMessage{
+                Username: username,
+                Message:  message,
+                Time:     time.Now(),
+            },
+        )
+
+        msgs := h.MessageCache[channelName]
+        if len(msgs) > MaxMessages_Cache {
+            h.MessageCache[channelName] = msgs[len(msgs)-MaxMessages_Cache:]
+        }
+    }
+
 
 
     if message == "/hi" {
@@ -292,7 +339,7 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
 				Username: username,
 				Time: time.Now(),
 
-	}			
+	    }			
 		data, failed := json.Marshal(message4Client)
 		if failed != nil {
 			models.App.Log.Error("Failed to parse json! ", slog.Any("error", failed))
