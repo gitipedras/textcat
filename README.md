@@ -1,14 +1,14 @@
 # textcat
 A simple chat application made using the ultimate golang.
 
-Webiste: Coming Soon!
+Webiste: [gitipedras.github.io](https://gitipedras.github.io)
 
 
 ## Features
 
 ### Client
 
-You can use any client, as long as its compatible with the textcat protocol.
+You can use any client, as long as its compatible with the textcat protocol. <br>
 Official client here: [Source Code](redirect.textcat.net/)
 
 ### Server
