@@ -13,14 +13,16 @@ import (
     "textcat/database"
 )   
 
-var MaxMessages_Cache = models.Config.MaxCachedMessages
-var MessageCacheEnabled = models.Config.CacheMessages
-
 type ChannelHandler struct {
 	Mu sync.RWMutex
 	StartedAt time.Time
 	Channels map[string]*Channel
     MessageCache map[string][]CachedMessage
+
+    // do this here since global variables are defined at compile time
+    // meaning var <xyz> would be nil if we put it up there
+    MaxCachedMessages int
+    MessageCacheEnabled bool
 }
 
 type Channel struct {
@@ -77,7 +79,6 @@ func (h *ChannelHandler) BuildChannelList() map[string]int {
 
 func (h *ChannelHandler) AddUser(channelName, token, username string, conn *websocket.Conn) {
     h.Mu.Lock()
-    defer h.Mu.Unlock()
 
     ch, ok := h.Channels[channelName] // ch is *Channel
     if !ok {
@@ -111,28 +112,27 @@ func (h *ChannelHandler) AddUser(channelName, token, username string, conn *webs
 	    }
 	    conn.WriteMessage(websocket.TextMessage, data)
 
-        if MessageCacheEnabled {
-            // Send the cached messages
-            if messages, ok := h.MessageCache[channelName]; ok {
-                for _, msg := range messages {
-                    response := models.WsSend{
-                        Rtype:    "NewMessage",
-                        Status:   "newmsg",
-                        Value:    msg.Message,
-                        Username: msg.Username,
-                        Time:     msg.Time,
-                    }
+        if h.MessageCacheEnabled {
+            var cached []CachedMessage
 
-                    data, err := json.Marshal(response)
-                    if err != nil {
-                        return
-                    }
-                    conn.WriteMessage(websocket.TextMessage, data)
+            if h.MessageCacheEnabled {
+                cached = append([]CachedMessage(nil), h.MessageCache[channelName]...)
+            }
+
+            for _, msg := range cached {
+                response := models.WsSend{
+                    Rtype: "NewMessage",
+                    Status: "newmsg",
+                    Value: msg.Message,
+                    Username: msg.Username,
+                    Time: msg.Time,
                 }
+                data, _ := json.Marshal(response)
+                conn.WriteMessage(websocket.TextMessage, data)
             }
         }
 
-
+        h.Mu.Unlock()
 
 
     } else {
@@ -184,8 +184,8 @@ func (h *ChannelHandler) RemoveUser(channelName, token, username string) {
 
 
 func (h *ChannelHandler) ChannelExists(channelName string) bool {
-    h.Mu.Lock()
-    defer h.Mu.Unlock()
+    h.Mu.RLock()
+    defer h.Mu.RUnlock()
 
     _, ok := h.Channels[channelName]
     if !ok {
@@ -215,7 +215,6 @@ func (h *ChannelHandler) CheckPerm(channelName, username, permission string) boo
 // used for users sending stuff
 func (h *ChannelHandler) SendMessage(channelName, message, username, token string, conn *websocket.Conn) bool {
     h.Mu.Lock()
-    defer h.Mu.Unlock()
 
     models.App.Log.Info("received message!", slog.String("message", message), slog.String("channel", channelName))
 
@@ -235,26 +234,9 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         return false
     }
 
-    if MessageCacheEnabled == true {
+    h.Mu.Unlock()
 
-        h.MessageCache[channelName] = append(
-            h.MessageCache[channelName],
-            CachedMessage{
-                Username: username,
-                Message:  message,
-                Time:     time.Now(),
-            },
-        )
-
-        msgs := h.MessageCache[channelName]
-        if len(msgs) > MaxMessages_Cache {
-            h.MessageCache[channelName] = msgs[len(msgs)-MaxMessages_Cache:]
-        }
-    }
-
-
-
-    if message == "/hi" {
+        if message == "/hi" {
 
         message4Client := models.WsSend{
 				Rtype:  "NewMessage",
@@ -320,6 +302,23 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         return true
     }
 
+    if h.MessageCacheEnabled == true {
+
+        h.MessageCache[channelName] = append(
+            h.MessageCache[channelName],
+            CachedMessage{
+                Username: username,
+                Message:  message,
+                Time:     time.Now(),
+            },
+        )
+
+        msgs := h.MessageCache[channelName]
+        if len(msgs) > h.MaxCachedMessages {
+            h.MessageCache[channelName] = msgs[len(msgs)-h.MaxCachedMessages:]
+        }
+    }
+
 
     //debug stuff that isn't really interesting
     //models.App.Log.Info("[MESSAGES] message OK, sending...")
@@ -353,7 +352,7 @@ func (h *ChannelHandler) SendMessage(channelName, message, username, token strin
         sent[userToken] = struct{}{}
     }
 
-    return false
+    return true
 }
 
 

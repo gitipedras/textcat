@@ -13,8 +13,10 @@ func ChannelsInit() {
 
     Channels = channels.ChannelHandler{
         StartedAt: time.Now(),
-        Channels:  make(map[string]*channels.Channel), // must initialize
+        Channels:  make(map[string]*channels.Channel),
         MessageCache: make(map[string][]channels.CachedMessage),
+        MessageCacheEnabled: models.Config.CacheMessages,
+        MaxCachedMessages: models.Config.MaxCachedMessages,
     }
 
     Channels.NewChannel("main")
