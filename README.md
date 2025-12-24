@@ -9,7 +9,7 @@ Webiste: [gitipedras.github.io](https://gitipedras.github.io)
 ### Client
 
 You can use any client, as long as its compatible with the textcat protocol. <br>
-Official client here: [Source Code](redirect.textcat.net/)
+Official client here: [Source Code](https://github.com/gitipedras/textcat-telesto-client)
 
 ### Server
 
