@@ -15,10 +15,14 @@ endif
 
 all: clean build archive
 
+test:
+	@staticcheck -f stylish cmd/main.go
+
 clean:
 	rm -rf $(BUILD_DIR)
 
 build:
+	@staticcheck -f stylish cmd/main.go
 	@mkdir -p $(BUILD_DIR)
 	@for os in $(OS_LIST); do \
 		for arch in $(ARCH_LIST); do \
