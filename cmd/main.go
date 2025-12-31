@@ -78,6 +78,7 @@ func createApp() *Application {
 
     app.Textcat = &tc.Textcat{
         Function: app, // Application implements Handler
+        Sessions: tc.NewSessionManager(),
     }
 	return 	app
 }
@@ -86,18 +87,60 @@ func createApp() *Application {
 Function run(*Application) runs a textcat server
 */
 
+func slashHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("This server is running textcat :)"))
+}
+
+
 func run(app *Application) {
-    defer app.Database.Close() // close the database connection
+	defer app.Database.Close() // close the database connection
 
 	var port string = ":8080"
-	http.HandleFunc("/textcat", ws(app))
 
-    app.Log.Info("started textcat server", slog.String("port", port))
-    err := http.ListenAndServe(port, nil)
-    if err != nil {
-    	fmt.Println(err)
-    }
+	// Wrap ws(app) with a panic recovery
+	handler := http.HandlerFunc(ws(app))
+    slash := http.HandlerFunc(slashHandler)
+	http.Handle("/textcat", RecoverMiddleware(handler, app))
+    http.Handle("/", RecoverMiddleware(slash, app))
+
+	app.Log.Info("started textcat server", slog.String("port", port))
+	err := http.ListenAndServe(port, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
+
+// Middleware to catch panics in HTTP handler goroutines
+func RecoverMiddleware(next http.Handler, app *Application) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				app.Log.Error("goroutine panicked: ", slog.Any("error", rec))
+
+				// Check if this is a WebSocket upgrade
+				if websocket.IsWebSocketUpgrade(r) {
+					// Upgrade the connection so we can write a message
+					conn, err := websocket.Upgrade(w, r, nil, 1024, 1024)
+					if err == nil {
+						msg := map[string]string{
+							"Req":    "status",
+							"Status": "server_error",
+						}
+						conn.WriteJSON(msg)
+						conn.Close()
+					}
+				} else {
+					http.Error(w, "internal server error", http.StatusInternalServerError)
+				}
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+
 
 
 /*

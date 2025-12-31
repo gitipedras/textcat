@@ -1,20 +1,19 @@
 package tc
 
 import (
-	"fmt"
 	"time"
 	"errors"
 )
 
 type Textcat struct {
 	Function LogicBridge
-	//SessionManager *SessionManager
+	Sessions *SessionManager
 }
 
 var ErrNotFound = errors.New("data does not found")
 
 func (tc *Textcat) CreateUser(username string, password string) error {
-	fmt.Printf("user register: %s: %s", username, password)
+	tc.Function.LogMsg("info", "user register", username, password)
 
 	tblErr := tc.Function.CreateTable("users")
 	if tblErr != nil {
@@ -55,33 +54,44 @@ func (tc *Textcat) CreateUser(username string, password string) error {
 }
 
 func (tc *Textcat) LoginUser(username string, password string) error {
-	fmt.Printf("user register: %s: %s", username, password)
+	tc.Function.LogMsg("info", "user login", username, password)
 
 	// Validate username
 	if !IsValidUsername(username) {
-		return errors.New("invalid username: must be alphanumeric, can contain '-' and '_'")
+		return errors.New("error: invalid username: must be alphanumeric, can contain '-' and '_'")
 	}
 
-	// Build user object
-	/**user := User{
-		Username:  username,
-		Password:  password,
-		Created:   time.Now(),
-		LastLogin: time.Now(),
-	}**/
-
-	// Delegate existence check to the Handler
 	var existing User
 	err := tc.Function.GetData("users", func(v any) bool {
 		u := v.(*User)
 		return u.Username == username
 	}, &existing)
-	if err == nil {
-		return errors.New("username is taken")
-	} else if err != nil && !errors.Is(err, ErrNotFound) {
-		return errors.New("user does not exist")
+
+	if errors.Is(err, ErrNotFound) {
+		return errors.New("error: user does not exist")
+	}
+	if err != nil {
+		return MakeError("server_error:", err)
 	}
 
-	// Delegate storage to the Handler
-	return nil
+	if existing.Password != password {
+		return errors.New("error: invalid password")
+	}
+
+	// After login succeeds
+	existing.LastLogin = time.Now()
+
+	// Store updated user
+	if err := tc.Function.StoreData("users", existing); err != nil {
+		return MakeError("server_error:", "failed to update last login:", err)
+	}
+
+	if tc.Sessions.CheckSessionUsername(username) {
+		return errors.New("error: a session already exists for this user")
+	}
+
+	tc.Sessions.AddSession(tc.Sessions.GetUniqueID(), username)
+
+
+	return errors.New("ok")
 }
