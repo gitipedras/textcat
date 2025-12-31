@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/websocket" // websocket
 	"net/http"
     "database/sql"
+    "github.com/zion8992/textcat/tc"
+    "strings"
 )
 
 var upgrader = websocket.Upgrader{
@@ -37,11 +39,17 @@ func ws(app *Application) http.HandlerFunc {
                 break
             }
 
-            MakeRequest("hi", "how are you", "ok", conn)
-
             if err := app.HandleReq(msg); err != nil {
-                MakeRequest("error", "", "server_error", conn)
-                app.Log.Error("failed to handle request", slog.Any("error", err))
+                if strings.HasPrefix(err.Error(), "error") {
+                    MakeRequest("status", err.Error(), "error", conn)
+                    app.Log.Error("request returned", slog.Any("error", err))
+                } else if strings.HasPrefix(err.Error(), "ok") {
+                    MakeRequest("status", err.Error(), "ok", conn)
+                    app.Log.Error("request ok", slog.Any("error", err))
+                } else {
+                    MakeRequest("status", err.Error(), "server_error", conn)
+                    app.Log.Error("internal server error", slog.Any("error", err))
+                }
             }
         }
     }
@@ -60,11 +68,17 @@ func createApp() *Application {
         panic(err)
     }
     //defer db.Close() -> happens in run()
+
+    
     
     app := &Application {
 		Log: slog.New(slog.NewTextHandler(os.Stderr, nil)),
         Database: db,
 	}
+
+    app.Textcat = &tc.Textcat{
+        Function: app, // Application implements Handler
+    }
 	return 	app
 }
 

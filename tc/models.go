@@ -1,5 +1,9 @@
 package tc
 
+import (
+	"time"
+)
+
 /*
 Textcat Websocket Protocol (TWP)
 */
@@ -17,19 +21,37 @@ type Recieve struct {
 
 type Send struct {
 	Req string // request type
+	/*
+		status: status of client's previous request
+	*/
 	Value string
 	Status string
 	/*
 	ok: went well
-	validate_fail: input validation error
 	server_error: internal server error
+	error: validation error, addon error, any other type of non-server error
 	*/
+}
+
+type User struct {
+	Username string
+	Password string
+	LastLogin time.Time
+	Created time.Time
 }
 
 
 // bridge between the cmd/ and the tc/
-type Handler interface {
-	HandleReq(msg []byte)
+type LogicBridge interface {
+	HandleReq(msg []byte) error
 	LogMsg(level string, message string, args ...any)
-	Store(table string, record any)
+
+	/* Data */
+	StoreData(table string, record any) error
+	GetDataByID(table string, id int64, out any) error
+	GetData(string, func(any) bool, any) error
+	CreateTable(name string) error
+
+	/* User */
+	UserExists(table string, username string) (bool, error)
 }
