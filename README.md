@@ -1,5 +1,6 @@
 # Textcat 
-### textcat v3 by zion8992
+#### Textcat 2.x.x is deprecated, textcat 3.0.0 is coming out soon
+#### With a better codebase
 This repository it only textcat *server*, client is available here.
 
 ## Running
