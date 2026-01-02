@@ -1,7 +1,6 @@
 # Textcat 
-#### Textcat 2.x.x is deprecated, textcat 3.0.0 is coming out soon
-#### With a better codebase
-This repository it only textcat *server*, client is available here.
+Textcat 2.x.x is no longer supported, [article about that here](https://zion8992.github.io/updates/textcat-v3/) \n
+This repository it only textcat *server*, client is available [here](https://github.com/zion8992/textcat-telesto-client).
 
 ## Running
 To run textcat, download the binaries from the *releases* tab.
